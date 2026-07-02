@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Horizontal merger simulations</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Horizontal merger simulations</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This repository contains functions that can be used to replicate the
+results from Panhans and Taragin (2023) “Consequences of model choice in
+predicting horizontal merger effects” <a href="https://doi.org/10.1016/j.ijindorg.2023.102986" class="uri">https://doi.org/10.1016/j.ijindorg.2023.102986</a>. This
+vignette illustrates how the functions can be used for the calibration
+and merger simulation of all four models analyzed in the paper.</p>
+<p>Simple models of competition that can be calibrated with only a few
+inputs can be useful to readily analyze certain mergers. For example,
+such an exercise can be useful when screening for possible concern in a
+transaction. Even with simple models, however, there are several nuances
+to consider. This document covers four models of differentiated product
+competition analyzed in Panhans and Taragin 2023: Bertrand, second score
+auction, a classic Nash bargaining model that nests Bertrand, and an
+alternative bargaining model formulation that nests the second score
+auction.</p>
+<div id="preliminaries" class="section level2">
+<h2>Preliminaries</h2>
+<p>First, we load the mergersim package and others that will be useful.
+BB and rootSolve are packages with optimization tools. The package
+numDeriv is needed for the jacobian() function.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(mergersim)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(BB)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">library</span>(rootSolve)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">library</span>(numDeriv)</span></code></pre></div>
+<p>In this document, we will assume a market with three suppliers and
+many customers. Customer <span class="math inline">\(i\)</span> has
+utility for good <span class="math inline">\(j\)</span>: <span class="math display">\[\begin{equation*}
+u_{ij} = \delta_j + \alpha p_j + \varepsilon_{ij}
+\end{equation*}\]</span></p>
+<p>We will assume that the preference shock follows the logit or type 1
+extreme value distribution.</p>
+<p>Suppose that the true marginal cost of production for each good <span class="math inline">\(j\)</span> is known, and let those costs and the
+true demand parameters be given by:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>alpha_true  <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">0.9</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>delta_true <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">81</span>,.<span class="dv">93</span>,.<span class="dv">82</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>c_j <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">05</span>,.<span class="dv">31</span>,.<span class="dv">30</span>)</span></code></pre></div>
+<p>Suppose that pre-merger, all three goods are owned by independent
+suppliers, and that we are investigating a transaction between firms 1
+and 2. Then, we can create ownership matrices to reflect the pre- and
+post-merger market, which we will use later:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>own_pre <span class="ot">=</span> <span class="fu">diag</span>(<span class="dv">3</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>own_post <span class="ot">&lt;-</span> own_pre</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>own_post[<span class="dv">1</span>,<span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>own_post[<span class="dv">2</span>,<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span></code></pre></div>
+</div>
+</div>
+<div id="bertrand-competition" class="section level1">
+<h1>Bertrand Competition</h1>
+<p>The Bertrand model of competition posits that firms offer
+differentiated products and compete on the basis of price setting. In
+particular, for a firm <span class="math inline">\(n\)</span> that owns
+product portfolio <span class="math inline">\(W_n\)</span>, specify the
+profit function as:</p>
+<p><span class="math display">\[\begin{equation*}
+\Pi^n = \sum_{k \in W_n} (p_k - c_k) \cdot s_k(p)
+\end{equation*}\]</span></p>
+<p>Taking the derivative of each firm’s profit function with respect to
+each owned good’s price yields a set of <span class="math inline">\(J\)</span> first order conditions that can be
+expressed, for each good <span class="math inline">\(j \in J\)</span>
+as: <span class="math display">\[\begin{equation*}
+\sum_{k \in W_n} (p_k - c_k) \cdot \frac{\partial s_k}{\partial p_j} +
+s_j = 0
+\end{equation*}\]</span> where <span class="math inline">\(W_n\)</span>
+denotes the set of goods owned by the same firm that owns good <span class="math inline">\(j\)</span>.</p>
+<p>This system of FOC’s can be expressed in matrix notation. Let <span class="math inline">\(\Omega\)</span> denote the J-by-J ownership
+matrix, <span class="math inline">\(t(dd)\)</span> denotes the transpose
+of a matrix where element <span class="math inline">\((j,k)\)</span>
+equals <span class="math inline">\(\frac{\partial s_j}{\partial
+p_k}\)</span>, <span class="math inline">\(m\)</span> is vector length
+<span class="math inline">\(J\)</span> of margins where the jth element
+is <span class="math inline">\((p_j - c_j)\)</span>, and <span class="math inline">\(s\)</span> is a vector of length <span class="math inline">\(J\)</span> of product market shares. Then the
+stacked FOC’s can be denoted as:</p>
+<p><span class="math display">\[\begin{equation*}
+0 = (\Omega * t(dd)) \%*\% m + s
+\end{equation*}\]</span></p>
+<p>We can use the true demand parameters and marginal costs to determine
+the equilibrium prices and shares. First, define the Bertrand FOC
+function:</p>
+<p>Then use multiroot to find the equilibrium prices that set the FOCs
+to zero:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>x0 <span class="ot">&lt;-</span> c_j<span class="sc">*</span><span class="fl">1.1</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>out1 <span class="ot">&lt;-</span> <span class="fu">multiroot</span>(<span class="at">f =</span> bertrand_foc, <span class="at">start =</span> x0, </span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>                  <span class="at">own =</span> own_pre, <span class="at">alpha=</span> alpha_true, </span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>                  <span class="at">delta =</span> delta_true, <span class="at">cost =</span> c_j)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> out1<span class="sc">$</span>root</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>p1</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; [1] 1.482363 1.709577 1.673102</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>share1 <span class="ot">&lt;-</span> (<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>p1))<span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">sum</span>(<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>p1)))</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>share1</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; [1] 0.2242812 0.2061096 0.1908020</span></span></code></pre></div>
+<p>The shares do not sum to one because there is also an outside
+option.</p>
+<p>To find the new equilibrium after the merger, simply pass the
+post-merger market structure matrix to the function.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>x0 <span class="ot">&lt;-</span> c_j<span class="sc">*</span><span class="fl">1.1</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>out1_post <span class="ot">&lt;-</span> <span class="fu">multiroot</span>(<span class="at">f =</span> bertrand_foc ,<span class="at">start =</span> x0, </span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>                  <span class="at">own =</span> own_post, <span class="at">alpha=</span> alpha_true, </span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>                  <span class="at">delta =</span> delta_true, <span class="at">cost =</span> c_j)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>p1_post <span class="ot">&lt;-</span> out1_post<span class="sc">$</span>root</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>p1_post</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; [1] 1.793086 2.053067 1.705423</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>share1_post <span class="ot">&lt;-</span> (<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>p1_post))<span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">sum</span>(<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>p1_post)))</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>share1_post</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; [1] 0.1916001 0.1709596 0.2094127</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co"># margins. Note that multi-product firm sets same level margins.</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>(p1_post <span class="sc">-</span> c_j)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; [1] 1.743086 1.743067 1.405423</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>(p1_post <span class="sc">-</span> c_j)<span class="sc">/</span>p1_post</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.9721151 0.8490064 0.8240906</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co"># price effect</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>(p1_post <span class="sc">-</span> p1)<span class="sc">/</span>p1_post</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.17328924 0.16730575 0.01895219</span></span></code></pre></div>
+<div id="calibrating-the-demand-parameters" class="section level2">
+<h2>Calibrating the demand parameters</h2>
+<p>Suppose now that the equilibrium pre-merger prices and shares are
+observed, and at least some firms costs are also known, but that the
+demand parameters need to be obtained in order to conduct a merger
+simulation. In some cases, the appropriate data and exogenous variation
+exists such that the demand parameters can be estimated. But other
+times, it may be difficult to do so credibly, or there may be
+insufficient time. In such cases, it can be informative to recover
+demand parameters that are implied by an assumed model of competition
+for the observed prices and shares to be an equilibrium.</p>
+<p>For the Bertrand model, calibration can be done based on the
+first-order conditions and share equations. There are <span class="math inline">\(J\)</span> pricing equations and <span class="math inline">\(J\)</span> share equations, for a total of <span class="math inline">\(2*J\)</span> equations. In terms of unknown
+parameters, we have <span class="math inline">\(J\)</span> unknown <span class="math inline">\(\delta_j\)</span>’s and one price coefficient
+<span class="math inline">\(\alpha\)</span>, for a total of <span class="math inline">\(J+1\)</span> unknown parameters. This means that
+the model is over-identified for calibration purposes.</p>
+<p>Because the model is over-identified, we use a weighting matrix to
+assign relative weights to the pricing equations and the share
+equations. Define an objective function to calibrate the Bertrand model,
+similar to the function defined above, except that now the demand
+parameters are the parameters to optimize over, and the prices and
+shares are inputs to be passed to the function.</p>
+<p>Then use this function to recover the demand parameters.</p>
+<!--  BBoptim() does not work here. BB fails when calibrating with use
+ of jacobian(). Need optim() -->
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1000</span>,<span class="dv">1000</span>,<span class="dv">1000</span>))</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>out1 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate, <span class="at">par =</span> x00, </span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>                   <span class="at">own =</span> own_pre, <span class="at">price =</span> p1, </span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>                   <span class="at">shares =</span> share1, <span class="at">cost  =</span> c_j,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>                   <span class="at">weight =</span> wt_matrix)</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co"># note that this optimization recovers the true demand parameters</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>out1<span class="sc">$</span>par</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>alpha_true</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>delta_cal <span class="ot">&lt;-</span> <span class="fu">log</span>(share1) <span class="sc">-</span> <span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">sum</span>(share1)) <span class="sc">-</span> out1<span class="sc">$</span>par<span class="sc">*</span>p1</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>delta_cal</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.81 0.93 0.82</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>delta_true</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.81 0.93 0.82</span></span></code></pre></div>
+<p>With the true demand parameters, the function bertrand_foc can be
+used to generate post-merger equilibrium prices and shares by changing
+the ownership matrix, and if desired the costs can also be changed to
+reflect merger efficiencies.</p>
+</div>
+<div id="calibration-with-some-unobserved-costs" class="section level2">
+<h2>Calibration with some unobserved costs</h2>
+<p>Typically, costs might be available for only a subset of the firms
+included in the analysis. For example, in a merger investigation,
+marginal cost data might only be available from the merging firms.
+Suppose now that we observe the costs only for firms 1 and 2:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>c_obs <span class="ot">&lt;-</span> c_j</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>c_obs[<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>c_obs</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.05 0.31   NA</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1000</span>,<span class="dv">1000</span>,<span class="dv">1000</span>))</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>out1b <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate, <span class="at">par =</span> x00, </span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>                   <span class="at">own =</span> own_pre, <span class="at">price =</span> p1, </span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>                   <span class="at">shares =</span> share1, <span class="at">cost  =</span> c_obs,</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>                   <span class="at">weight =</span> wt_matrix)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="co"># note that this optimization recovers the true demand parameters</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>out1b<span class="sc">$</span>par</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>alpha_true</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>delta_cal <span class="ot">&lt;-</span> <span class="fu">log</span>(share1) <span class="sc">-</span> <span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">sum</span>(share1)) <span class="sc">-</span> out1b<span class="sc">$</span>par<span class="sc">*</span>p1</span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>delta_cal</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.81 0.93 0.82</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>delta_true</span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.81 0.93 0.82</span></span></code></pre></div>
+<p>The calibrated parameters closely match the true parameters. Again,
+predicted merger effects can be obtained using the bertrand_foc function
+and changing the ownership matrix, and if desired, the firm costs.</p>
+</div>
+</div>
+<div id="second-score-auction" class="section level1">
+<h1>Second score auction</h1>
+<p>The second score auction model is discussed in detail in Miller
+(2014) <a href="https://doi.org/10.1016/j.ijindorg.2014.10.001" class="uri">https://doi.org/10.1016/j.ijindorg.2014.10.001</a>. Briefly,
+it assumes that firms are submitting bids to the customer, and has an
+equilibrium condition where suppliers’ dominant strategy is to bid their
+costs. The customer selects the supplier that creates the greatest
+surplus, and the price is set to make the customer indifferent between
+the best option at the equilibrium price and obtaining the second best
+option at cost.</p>
+<p>Assuming logit demand, the pricing condition in the second score
+auction is given by: <span class="math display">\[\begin{equation*}
+p_j = c_j + \frac{1}{\alpha*\sum_{k \in W_j} s_k }\log(1 - \sum_{k \in
+W_j} s_k)
+\end{equation*}\]</span> where <span class="math inline">\(W_j\)</span>
+denotes the set of all products that are owned by the same firm that
+owns product <span class="math inline">\(j\)</span>, including product
+<span class="math inline">\(j\)</span>.</p>
+<p>Since we know the true parameters, we can use the margin condition
+from the SSA model to calculate the equilibrium shares, as well as
+pre-merger and post-merger prices. Therefore, we can also calculate the
+true price effect of the merger.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>share2 <span class="ot">&lt;-</span> (<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>c_j))<span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">sum</span>(<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>c_j)))</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> c_j <span class="sc">+</span> <span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> own_pre<span class="sc">%*%</span>share2)<span class="sc">/</span>(alpha_true<span class="sc">*</span>own_pre<span class="sc">%*%</span>share2)</span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a>p2_post <span class="ot">&lt;-</span> c_j <span class="sc">+</span> <span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> own_post<span class="sc">%*%</span>share2)<span class="sc">/</span>(alpha_true<span class="sc">*</span>own_post<span class="sc">%*%</span>share2)</span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a>(p2_post <span class="sc">-</span> p2)<span class="sc">/</span>p2</span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="co">#&gt;           [,1]</span></span>
+<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a><span class="co">#&gt; [1,] 0.2582731</span></span>
+<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a><span class="co">#&gt; [2,] 0.2402088</span></span>
+<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a><span class="co">#&gt; [3,] 0.0000000</span></span></code></pre></div>
+<div id="calibrating-the-demand-parameters-1" class="section level2">
+<h2>Calibrating the demand parameters</h2>
+<p>Suppose now that the equilibrium pre-merger prices and shares are
+observed, and at least some firms costs are also known, but that the
+demand parameters need to be obtained in order to conduct a merger
+simulation.</p>
+<p>For the second score auction, calibration can be done based on the
+second score pricing conditions and share equations. There are <span class="math inline">\(J\)</span> pricing equations and <span class="math inline">\(J\)</span> share equations, for a total of <span class="math inline">\(2*J\)</span> equations. In terms of unknown
+parameters, we have <span class="math inline">\(J\)</span> unknown <span class="math inline">\(\delta_j\)</span>’s and one price coefficient
+<span class="math inline">\(\alpha\)</span>, for a total of <span class="math inline">\(J+1\)</span> unknown parameters. This means that
+the model is over-identified for calibration purposes.</p>
+<p>Because the model is over-identified, we use a weighting matrix to
+assign relative weights to the pricing equations and the share
+equations. The second score auction calibration function searches for
+demand parameters that best match model predicted shares and prices to
+the observed shares and prices. Specifically, the function below
+minimizes the squared sum of the difference between predicted and
+observed values, and uses the weighting matrix to assign relative
+weights to each equation.</p>
+<p>Rather than jointly optimizing over all of the demand parameters, it
+is computationally faster to first calibrate only the price coefficient
+<span class="math inline">\(\alpha\)</span> using the available pricing
+equations, and then recover the <span class="math inline">\(\delta\)</span> parameters from the share
+equations once the price coefficient is known.</p>
+<p>Only one good’s marginal cost needs to be known to be able to
+calibrate the model, and often times cost information will only be
+readily available from merging firms. We can use ssa_calibrate to find
+<span class="math inline">\(\alpha\)</span> using only goods that have
+cost information available.</p>
+<p>Suppose that we observe only the costs of firms 1 and 2:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a>c_obs <span class="ot">&lt;-</span> c_j</span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>c_obs[<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>c_obs</span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.05 0.31   NA</span></span></code></pre></div>
+<p>Now we calibrate <span class="math inline">\(\alpha\)</span> with the
+available pricing conditions:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>))</span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a>result4 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> ssa_calibrate, <span class="at">par =</span> <span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">2</span>),</span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a>                    <span class="at">lower =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>), <span class="at">upper =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.0001</span>),</span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a>                    <span class="at">own=</span>own_pre, <span class="at">price =</span> p2, <span class="at">share =</span> share2,</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a>                    <span class="at">cost =</span> c_obs, <span class="at">weight =</span> wt_matrix)</span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  42.71919  pgrad:  549.2472 </span></span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a><span class="co">#&gt; iter:  10  f-value:  0.0003334565  pgrad:  0.07430411 </span></span>
+<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a></span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>alpha4 <span class="ot">&lt;-</span> result4<span class="sc">$</span>par</span>
+<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a>alpha4       <span class="co"># recover true value</span></span>
+<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="co">#&gt; [1] -0.9000002</span></span></code></pre></div>
+<p>With <span class="math inline">\(\alpha\)</span> recovered, we can
+now recover any missing costs:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a>cost4 <span class="ot">&lt;-</span> p2 <span class="sc">-</span> <span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> own_pre<span class="sc">%*%</span>share2) <span class="sc">/</span> (alpha4<span class="sc">*</span>own_pre<span class="sc">%*%</span>share2)</span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>cost4</span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a><span class="co">#&gt;            [,1]</span></span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a><span class="co">#&gt; [1,] 0.05000023</span></span>
+<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a><span class="co">#&gt; [2,] 0.31000022</span></span>
+<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a><span class="co">#&gt; [3,] 0.30000022</span></span></code></pre></div>
+<p>The recovered costs match the true costs:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a>c_j</span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.05 0.31 0.30</span></span></code></pre></div>
+<p>This is sufficient information to predict the effects of a merger
+between firms 1 and 2. The predicted effects using the calibrated
+parameters match the true unilateral merger effects.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a>p4 <span class="ot">&lt;-</span> cost4 <span class="sc">+</span> <span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> own_pre<span class="sc">%*%</span>share2)<span class="sc">/</span>(alpha4<span class="sc">*</span>own_pre<span class="sc">%*%</span>share2)</span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>p4_post <span class="ot">&lt;-</span> cost4 <span class="sc">+</span> <span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> own_post<span class="sc">%*%</span>share2)<span class="sc">/</span>(alpha4<span class="sc">*</span>own_post<span class="sc">%*%</span>share2)</span>
+<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" tabindex="-1"></a>(p4_post <span class="sc">-</span> p4)<span class="sc">/</span>p4</span>
+<span id="cb29-5"><a href="#cb29-5" tabindex="-1"></a><span class="co">#&gt;           [,1]</span></span>
+<span id="cb29-6"><a href="#cb29-6" tabindex="-1"></a><span class="co">#&gt; [1,] 0.2582731</span></span>
+<span id="cb29-7"><a href="#cb29-7" tabindex="-1"></a><span class="co">#&gt; [2,] 0.2402088</span></span>
+<span id="cb29-8"><a href="#cb29-8" tabindex="-1"></a><span class="co">#&gt; [3,] 0.0000000</span></span></code></pre></div>
+<p>Note that if the cost is observed for only one product, the model is
+exactly identified, and the true price coefficient parameter <span class="math inline">\(\alpha\)</span> can be calculated analytically.
+For example, the calculation below recovers the true price coefficient
+assuming that only the cost/margin of product 1 is available. The
+optimizer used above is useful when margins are available for more than
+one product.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="dv">1</span><span class="sc">/</span>(p4[<span class="dv">1</span>] <span class="sc">-</span> c_obs[<span class="dv">1</span>]) <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> share2[<span class="dv">1</span>]) <span class="sc">/</span> share2[<span class="dv">1</span>]</span>
+<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+</div>
+</div>
+<div id="traditional-bargaining-model-nests-bertrand" class="section level1">
+<h1>Traditional Bargaining Model (nests Bertrand)</h1>
+<p>For now, we skip the mathematical framework for the bargaining
+models, but the equations are given in many papers including Panhans and
+Taragin (2023). Instead, in this document we focus on defining functions
+that will allow us to generate equilibrium prices and shares, and then
+recover the true demand parameters from those equilibrium objects. We
+first consider a traditional bargaining setup that nests the Bertrand
+model.</p>
+<p>Let’s assume the demand parameters specified above are the true
+demand parameters, and generate equilibrium market characteristics.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a>x0 <span class="ot">&lt;-</span> c_j<span class="sc">*</span><span class="fl">1.5</span></span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" tabindex="-1"></a>out3 <span class="ot">&lt;-</span> <span class="fu">multiroot</span>(<span class="at">f =</span> bargain_foc, <span class="at">start =</span> x0, <span class="at">own =</span> own_pre, </span>
+<span id="cb31-4"><a href="#cb31-4" tabindex="-1"></a>                  <span class="at">alpha =</span> alpha_true, <span class="at">delta =</span> delta_true, <span class="at">cost =</span> c_j,</span>
+<span id="cb31-5"><a href="#cb31-5" tabindex="-1"></a>                  <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" tabindex="-1"></a>p3 <span class="ot">&lt;-</span> out3<span class="sc">$</span>root</span>
+<span id="cb31-7"><a href="#cb31-7" tabindex="-1"></a>share3 <span class="ot">&lt;-</span> (<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>p3))<span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">sum</span>(<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>p3)))</span>
+<span id="cb31-8"><a href="#cb31-8" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" tabindex="-1"></a><span class="fu">print</span>(p3)</span>
+<span id="cb31-10"><a href="#cb31-10" tabindex="-1"></a><span class="co">#&gt; [1] 0.7543970 0.9968632 0.9731435</span></span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="fu">print</span>(share3)</span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.2767645 0.2508731 0.2295900</span></span></code></pre></div>
+<div id="calibration" class="section level2">
+<h2>Calibration</h2>
+<p>The calibration function can be used to recover the demand parameters
+from these prices, shares, and costs.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a>J <span class="ot">&lt;-</span> <span class="fu">length</span>(c_j)</span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>alpha_start <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">1.2</span></span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>delta_start <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>,J)</span>
+<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_start,delta_start)</span>
+<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(J<span class="sc">*</span><span class="dv">2</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" tabindex="-1"></a><span class="fu">bargain_calibrate</span>(<span class="at">param =</span> x00, </span>
+<span id="cb33-9"><a href="#cb33-9" tabindex="-1"></a>                       <span class="at">own =</span> own_pre, <span class="at">price =</span> p3, </span>
+<span id="cb33-10"><a href="#cb33-10" tabindex="-1"></a>                       <span class="at">shares =</span> share3, <span class="at">cost  =</span> c_j,</span>
+<span id="cb33-11"><a href="#cb33-11" tabindex="-1"></a>                       <span class="at">weight =</span> wt_matrix, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
+<span id="cb33-12"><a href="#cb33-12" tabindex="-1"></a><span class="co">#&gt;            [,1]</span></span>
+<span id="cb33-13"><a href="#cb33-13" tabindex="-1"></a><span class="co">#&gt; [1,] 0.08717853</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a></span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>out3 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> bargain_calibrate, <span class="at">par =</span> x00, </span>
+<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">price =</span> p3, </span>
+<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a>                <span class="at">shares =</span> share3, <span class="at">cost  =</span> c_j,</span>
+<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a>                <span class="at">weight =</span> wt_matrix, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
+<span id="cb34-7"><a href="#cb34-7" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.08717853  pgrad:  0.4463191 </span></span>
+<span id="cb34-8"><a href="#cb34-8" tabindex="-1"></a><span class="co">#&gt; iter:  10  f-value:  0.0001924759  pgrad:  0.00761619 </span></span>
+<span id="cb34-9"><a href="#cb34-9" tabindex="-1"></a><span class="co">#&gt; iter:  20  f-value:  7.093329e-05  pgrad:  0.0005777945 </span></span>
+<span id="cb34-10"><a href="#cb34-10" tabindex="-1"></a><span class="co">#&gt; iter:  30  f-value:  2.524549e-05  pgrad:  0.002185755 </span></span>
+<span id="cb34-11"><a href="#cb34-11" tabindex="-1"></a><span class="co">#&gt; iter:  40  f-value:  3.140482e-08  pgrad:  3.498634e-05 </span></span>
+<span id="cb34-12"><a href="#cb34-12" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a></span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a><span class="co"># check if we recovered correct demand parameters</span></span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a><span class="co"># finding good initial values is important.</span></span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a>alpha3 <span class="ot">&lt;-</span> out3<span class="sc">$</span>par[<span class="dv">1</span>]</span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a>delta3 <span class="ot">&lt;-</span> out3<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>]</span>
+<span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a>alpha_true</span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a>alpha3</span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9000906</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>delta_true</span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.81 0.93 0.82</span></span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a>delta3</span>
+<span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.8116445 0.9317579 0.8218446</span></span></code></pre></div>
+</div>
+</div>
+<div id="alternative-bargaining-model-nests-ssa" class="section level1">
+<h1>Alternative Bargaining Model (nests SSA)</h1>
+<p>Next, we consider an alternative bargaining setup that nests the
+second score auction.</p>
+<p>Let’s assume the demand parameters specified above are the true
+demand parameters, and generate equilibrium market characteristics.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a>x0 <span class="ot">&lt;-</span> c_j<span class="sc">*</span><span class="fl">1.5</span></span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a>out4 <span class="ot">&lt;-</span> <span class="fu">multiroot</span>(<span class="at">f =</span> ssbargain_foc, <span class="at">start =</span> x0, <span class="at">own =</span> own_pre, </span>
+<span id="cb39-4"><a href="#cb39-4" tabindex="-1"></a>                       <span class="at">alpha =</span> alpha_true, <span class="at">delta =</span> delta_true, </span>
+<span id="cb39-5"><a href="#cb39-5" tabindex="-1"></a>                  <span class="at">cost =</span> c_j, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
+<span id="cb39-6"><a href="#cb39-6" tabindex="-1"></a>p4 <span class="ot">&lt;-</span> out4<span class="sc">$</span>root</span>
+<span id="cb39-7"><a href="#cb39-7" tabindex="-1"></a>share4 <span class="ot">&lt;-</span> (<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>c_j))<span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">sum</span>(<span class="fu">exp</span>(delta_true <span class="sc">+</span> alpha_true<span class="sc">*</span>c_j)))</span>
+<span id="cb39-8"><a href="#cb39-8" tabindex="-1"></a></span>
+<span id="cb39-9"><a href="#cb39-9" tabindex="-1"></a><span class="fu">print</span>(p4)</span>
+<span id="cb39-10"><a href="#cb39-10" tabindex="-1"></a><span class="co">#&gt; [1] 0.7177362 0.9626474 0.9412909</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="fu">print</span>(share4)</span>
+<span id="cb40-2"><a href="#cb40-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.3160423 0.2819913 0.2549012</span></span></code></pre></div>
+<p>Then we can use the calibration function to recover the demand
+parameters from these prices, shares, and costs.</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a>alpha_start <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">1.2</span></span>
+<span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a>delta_start <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>,J)</span>
+<span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_start,delta_start)</span>
+<span id="cb41-4"><a href="#cb41-4" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(J<span class="sc">*</span><span class="dv">2</span>)</span>
+<span id="cb41-5"><a href="#cb41-5" tabindex="-1"></a></span>
+<span id="cb41-6"><a href="#cb41-6" tabindex="-1"></a>out4 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> ssbargain_calibrate, <span class="at">par =</span> x00, </span>
+<span id="cb41-7"><a href="#cb41-7" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">price =</span> p4, </span>
+<span id="cb41-8"><a href="#cb41-8" tabindex="-1"></a>                <span class="at">shares =</span> share4, <span class="at">cost  =</span> c_j,</span>
+<span id="cb41-9"><a href="#cb41-9" tabindex="-1"></a>                <span class="at">weight =</span> wt_matrix, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
+<span id="cb41-10"><a href="#cb41-10" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.0806167  pgrad:  0.4043435 </span></span>
+<span id="cb41-11"><a href="#cb41-11" tabindex="-1"></a><span class="co">#&gt; iter:  10  f-value:  9.529025e-05  pgrad:  0.001538167 </span></span>
+<span id="cb41-12"><a href="#cb41-12" tabindex="-1"></a><span class="co">#&gt; iter:  20  f-value:  1.905773e-05  pgrad:  0.0003214364 </span></span>
+<span id="cb41-13"><a href="#cb41-13" tabindex="-1"></a><span class="co">#&gt; iter:  30  f-value:  2.18451e-06  pgrad:  0.0001603663 </span></span>
+<span id="cb41-14"><a href="#cb41-14" tabindex="-1"></a><span class="co">#&gt; iter:  40  f-value:  1.439968e-06  pgrad:  0.0006213753 </span></span>
+<span id="cb41-15"><a href="#cb41-15" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a></span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a><span class="co"># check if we recovered correct demand parameters</span></span>
+<span id="cb42-3"><a href="#cb42-3" tabindex="-1"></a><span class="co"># finding good initial values is important.</span></span>
+<span id="cb42-4"><a href="#cb42-4" tabindex="-1"></a>alpha4 <span class="ot">&lt;-</span> out4<span class="sc">$</span>par[<span class="dv">1</span>]</span>
+<span id="cb42-5"><a href="#cb42-5" tabindex="-1"></a>delta4 <span class="ot">&lt;-</span> out4<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>]</span>
+<span id="cb42-6"><a href="#cb42-6" tabindex="-1"></a>alpha_true</span>
+<span id="cb42-7"><a href="#cb42-7" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" tabindex="-1"></a>alpha4</span>
+<span id="cb43-2"><a href="#cb43-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9000104</span></span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" tabindex="-1"></a>delta_true</span>
+<span id="cb44-2"><a href="#cb44-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.81 0.93 0.82</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" tabindex="-1"></a>delta4</span>
+<span id="cb45-2"><a href="#cb45-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.8103971 0.9304098 0.8204080</span></span></code></pre></div>
+</div>
+<div id="generalized-nested-logit-gnl-demand" class="section level1">
+<h1>Generalized Nested Logit (GNL) Demand</h1>
+<p>All of the models above have been implemented with the standard logit
+demand assumption. The same functions can be used to implement a
+Generalized Nested Logit demand system, which allows for overlapping
+nests and includes nested logit and standard logit as special cases.</p>
+<p>Here, I’ll illustrate the implementation of GNL with the Bertrand
+model.</p>
+<div id="bertrand" class="section level2">
+<h2>Bertrand</h2>
+<p>First, we define the GNL structure. <span class="math inline">\(K\)</span> indicates the number of nests. <span class="math inline">\(B\)</span> indicates the nests each good belongs
+to: row <span class="math inline">\(j\)</span> column <span class="math inline">\(k\)</span> is 1 if good <span class="math inline">\(j\)</span> belongs to nest <span class="math inline">\(k\)</span>. <span class="math inline">\(a\)</span>
+is a matrix of the same dimension as <span class="math inline">\(B\)</span> that designates each good’s degree of
+membership in each nest. For ease of interpretation, the rows of <span class="math inline">\(a\)</span> should sum to 1 (meaning each good
+should have a member degree in each of its nests that sum to 1). <span class="math inline">\(\mu\)</span> is a vector of length <span class="math inline">\(K\)</span> that represents the nesting parameter
+for each nest.</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a>K1 <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb46-2"><a href="#cb46-2" tabindex="-1"></a></span>
+<span id="cb46-3"><a href="#cb46-3" tabindex="-1"></a>B1 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">*</span> <span class="fu">matrix</span>( <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>,</span>
+<span id="cb46-4"><a href="#cb46-4" tabindex="-1"></a>               <span class="dv">1</span>,<span class="dv">0</span>,</span>
+<span id="cb46-5"><a href="#cb46-5" tabindex="-1"></a>               <span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb46-6"><a href="#cb46-6" tabindex="-1"></a>             <span class="at">ncol =</span> K1, <span class="at">nrow =</span> J, <span class="at">byrow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb46-7"><a href="#cb46-7" tabindex="-1"></a>a1 <span class="ot">&lt;-</span> B1    <span class="co"># rows of a should sum to 1 to facilitate interpretation.</span></span>
+<span id="cb46-8"><a href="#cb46-8" tabindex="-1"></a>mu1 <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fl">1.0</span>,K1) <span class="co"># nesting parameters all 1 simplifies to logit</span></span>
+<span id="cb46-9"><a href="#cb46-9" tabindex="-1"></a>mu2 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.8</span>,<span class="fl">0.8</span>)</span></code></pre></div>
+<p>We will skip calibration and assume we have the true demand
+parameters, and just need to simulate the equilibrium.</p>
+<p>First, let’s use the GNL function but input values for logit demand
+and show that we get the same answer that we got above.</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" tabindex="-1"></a></span>
+<span id="cb47-2"><a href="#cb47-2" tabindex="-1"></a>x0 <span class="ot">&lt;-</span> p1<span class="sc">*</span><span class="fl">1.1</span></span>
+<span id="cb47-3"><a href="#cb47-3" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" tabindex="-1"></a>out1 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">fn =</span> bertrand_foc, <span class="at">par =</span> x0, </span>
+<span id="cb47-5"><a href="#cb47-5" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">alpha =</span> alpha_true, </span>
+<span id="cb47-6"><a href="#cb47-6" tabindex="-1"></a>                <span class="at">delta =</span> delta_true, <span class="at">cost =</span> c_j, <span class="at">sumFOC =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb47-7"><a href="#cb47-7" tabindex="-1"></a></span>
+<span id="cb47-8"><a href="#cb47-8" tabindex="-1"></a>p_R1 <span class="ot">&lt;-</span> out1<span class="sc">$</span>par</span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" tabindex="-1"></a><span class="co"># Equilibrium prices are the same as we had from logit model before</span></span>
+<span id="cb48-2"><a href="#cb48-2" tabindex="-1"></a>p_R1</span>
+<span id="cb48-3"><a href="#cb48-3" tabindex="-1"></a>p1</span>
+<span id="cb48-4"><a href="#cb48-4" tabindex="-1"></a>  </span></code></pre></div>
+<p>But when we provide the function with the GNL structure that is
+different than the standard logit, we get a different result.</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" tabindex="-1"></a></span>
+<span id="cb49-2"><a href="#cb49-2" tabindex="-1"></a>x0 <span class="ot">&lt;-</span> p1<span class="sc">*</span><span class="fl">1.1</span></span>
+<span id="cb49-3"><a href="#cb49-3" tabindex="-1"></a></span>
+<span id="cb49-4"><a href="#cb49-4" tabindex="-1"></a>out2 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">fn =</span> bertrand_foc, <span class="at">par =</span> x0, </span>
+<span id="cb49-5"><a href="#cb49-5" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">alpha =</span> alpha_true, </span>
+<span id="cb49-6"><a href="#cb49-6" tabindex="-1"></a>                <span class="at">delta =</span> delta_true, <span class="at">cost =</span> c_j,</span>
+<span id="cb49-7"><a href="#cb49-7" tabindex="-1"></a>                <span class="at">nest_allocation=</span>a1, <span class="at">mu=</span>mu2,</span>
+<span id="cb49-8"><a href="#cb49-8" tabindex="-1"></a>                <span class="at">sumFOC =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb49-9"><a href="#cb49-9" tabindex="-1"></a></span>
+<span id="cb49-10"><a href="#cb49-10" tabindex="-1"></a>p_R2 <span class="ot">&lt;-</span> out2<span class="sc">$</span>par</span></code></pre></div>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" tabindex="-1"></a><span class="co"># Equilibrium prices are different than logit result</span></span>
+<span id="cb50-2"><a href="#cb50-2" tabindex="-1"></a>p_R2</span>
+<span id="cb50-3"><a href="#cb50-3" tabindex="-1"></a><span class="co">#&gt; [1] 1.298512 1.515000 1.669673</span></span></code></pre></div>
+<p>It may sometimes also be useful to have a function that computes a
+diversion ratio matrix. Note that for nested logit and generalized
+nested logit, diversion ratios computed based on a marginal price
+increase are different than those computed from removing a choice from
+the choice set. See Conlon and Mortimer (2021) ``Empirical Properties of
+Diversion Ratios’’ for more details.</p>
+<p>This function can be used to obtain a diversion ratio matrix.</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" tabindex="-1"></a>diversions <span class="ot">&lt;-</span> <span class="fu">diversion_calc</span>(<span class="at">price=</span>p_R2,<span class="at">alpha=</span>alpha_true,<span class="at">delta=</span>delta_true,</span>
+<span id="cb51-2"><a href="#cb51-2" tabindex="-1"></a>                             <span class="at">nest_allocation=</span>a1,<span class="at">mu=</span>mu2)</span>
+<span id="cb51-3"><a href="#cb51-3" tabindex="-1"></a></span>
+<span id="cb51-4"><a href="#cb51-4" tabindex="-1"></a>diversions</span>
+<span id="cb51-5"><a href="#cb51-5" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]</span></span>
+<span id="cb51-6"><a href="#cb51-6" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.4027067 0.2004861</span></span>
+<span id="cb51-7"><a href="#cb51-7" tabindex="-1"></a><span class="co">#&gt; [2,] 0.4206808 0.0000000 0.1944529</span></span>
+<span id="cb51-8"><a href="#cb51-8" tabindex="-1"></a><span class="co">#&gt; [3,] 0.2824859 0.2572581 0.0000000</span></span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" tabindex="-1"></a><span class="fu">rowSums</span>(diversions) <span class="co"># each row should sum to &lt;1 because of outside option</span></span>
+<span id="cb52-2"><a href="#cb52-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.6031927 0.6151337 0.5397440</span></span></code></pre></div>
+<p>The above diversion ratio matrix is based on average diversion rates,
+which are computed based on removing a product from the choice set.
+Alternatively, one may be interested in marginal diversion ratios, which
+are the diversion rates based on a marginal increase in price for a
+good. For a standard logit demand system, these two diversion ratios are
+identical. But for more general demand systems, these two diversion
+ratios will not be identical. The marginal diversion can be computed by
+using the ‘marginal’ option in the function.</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" tabindex="-1"></a>diversions2 <span class="ot">&lt;-</span> <span class="fu">diversion_calc</span>(<span class="at">price=</span>p_R2,<span class="at">alpha=</span>alpha_true, <span class="at">delta=</span>delta_true,</span>
+<span id="cb53-2"><a href="#cb53-2" tabindex="-1"></a>                              <span class="at">nest_allocation=</span>a1, <span class="at">mu=</span>mu2, <span class="at">marginal =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb53-3"><a href="#cb53-3" tabindex="-1"></a></span>
+<span id="cb53-4"><a href="#cb53-4" tabindex="-1"></a>diversions2</span>
+<span id="cb53-5"><a href="#cb53-5" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]</span></span>
+<span id="cb53-6"><a href="#cb53-6" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.3687388 0.2118876</span></span>
+<span id="cb53-7"><a href="#cb53-7" tabindex="-1"></a><span class="co">#&gt; [2,] 0.3907889 0.0000000 0.2044863</span></span>
+<span id="cb53-8"><a href="#cb53-8" tabindex="-1"></a><span class="co">#&gt; [3,] 0.2824859 0.2572581 0.0000000</span></span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" tabindex="-1"></a><span class="fu">rowSums</span>(diversions2) <span class="co"># each row should sum to &lt;1 because of outside option</span></span>
+<span id="cb54-2"><a href="#cb54-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.5806264 0.5952753 0.5397440</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

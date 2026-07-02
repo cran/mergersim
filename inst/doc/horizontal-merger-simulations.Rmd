@@ -1,0 +1,480 @@
+---
+title: "Horizontal merger simulations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{horizontal-merger-simulations}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Introduction
+
+This repository contains functions that can be used to replicate the results from Panhans and Taragin (2023) "Consequences of model choice in predicting horizontal merger effects" <https://doi.org/10.1016/j.ijindorg.2023.102986>. This vignette illustrates how the functions can be used for the calibration and merger simulation of all four models analyzed in the paper.
+
+Simple models of competition that can be calibrated with only a few inputs can be useful to readily analyze certain mergers. For example, such an exercise can be useful when screening for possible concern in a transaction. Even with simple models, however, there are several nuances to consider. This document covers four models of differentiated product competition analyzed in Panhans and Taragin 2023: Bertrand, second score auction, a classic Nash bargaining model that nests Bertrand, and an alternative bargaining model formulation that nests the second score auction.
+
+## Preliminaries
+
+First, we load the mergersim package and others that will be useful. BB and rootSolve are packages with optimization tools. The package numDeriv is needed for the jacobian() function.
+
+```{r setup}
+library(mergersim)
+```
+
+```{r}
+library(BB)
+library(rootSolve)
+library(numDeriv)
+```
+
+In this document, we will assume a market with three suppliers and many customers. Customer $i$ has utility for good $j$:
+\begin{equation*}
+u_{ij} = \delta_j + \alpha p_j + \varepsilon_{ij}
+\end{equation*}
+
+We will assume that the preference shock follows the logit or type 1 extreme value distribution. 
+
+Suppose that the true marginal cost of production for each good $j$ is known, and let those costs and the true demand parameters be given by:
+
+```{r}
+alpha_true  <- -0.9
+delta_true <- c(.81,.93,.82)
+c_j <- c(.05,.31,.30)
+```
+
+Suppose that pre-merger, all three goods are owned by independent suppliers, and that we are investigating a transaction between firms 1 and 2. Then, we can create ownership matrices to reflect the pre- and post-merger market, which we will use later:
+
+```{r}
+own_pre = diag(3)
+own_post <- own_pre
+own_post[1,2] <- 1
+own_post[2,1] <- 1
+```
+
+# Bertrand Competition
+
+The Bertrand model of competition posits that firms offer differentiated products and compete on the basis of price setting. In particular, for a firm $n$ that owns product portfolio $W_n$, specify the profit function as:
+
+\begin{equation*}
+\Pi^n = \sum_{k \in W_n} (p_k - c_k) \cdot s_k(p) 
+\end{equation*}
+
+Taking the derivative of each firm's profit function with respect to each owned good's price yields a set of $J$ first order conditions that can be expressed, for each good $j \in J$ as:
+\begin{equation*}
+\sum_{k \in W_n} (p_k - c_k) \cdot \frac{\partial s_k}{\partial p_j} + s_j = 0
+\end{equation*}
+where $W_n$ denotes the set of goods owned by the same firm that owns good $j$.
+
+This system of FOC's can be expressed in matrix notation. Let $\Omega$ denote the J-by-J ownership matrix, $t(dd)$ denotes the transpose of a matrix where element $(j,k)$ equals $\frac{\partial s_j}{\partial p_k}$, $m$ is vector length $J$ of margins where the jth element is $(p_j - c_j)$, and $s$ is a vector of length $J$ of product market shares. Then the stacked FOC's can be denoted as:
+
+\begin{equation*}
+0 = (\Omega * t(dd)) \%*\% m + s
+\end{equation*}
+
+We can use the true demand parameters and marginal costs to determine the equilibrium prices and shares. First, define the Bertrand FOC function:
+
+
+Then use multiroot to find the equilibrium prices that set the FOCs to zero:
+```{r}
+x0 <- c_j*1.1
+out1 <- multiroot(f = bertrand_foc, start = x0, 
+                  own = own_pre, alpha= alpha_true, 
+                  delta = delta_true, cost = c_j)
+
+p1 <- out1$root
+p1
+share1 <- (exp(delta_true + alpha_true*p1))/(1+sum(exp(delta_true + alpha_true*p1)))
+share1
+```
+
+The shares do not sum to one because there is also an outside option.
+
+To find the new equilibrium after the merger, simply pass the post-merger market structure matrix to the function.
+
+```{r}
+x0 <- c_j*1.1
+out1_post <- multiroot(f = bertrand_foc ,start = x0, 
+                  own = own_post, alpha= alpha_true, 
+                  delta = delta_true, cost = c_j)
+
+p1_post <- out1_post$root
+p1_post
+share1_post <- (exp(delta_true + alpha_true*p1_post))/(1+sum(exp(delta_true + alpha_true*p1_post)))
+share1_post
+
+# margins. Note that multi-product firm sets same level margins.
+(p1_post - c_j)
+(p1_post - c_j)/p1_post
+
+# price effect
+(p1_post - p1)/p1_post
+
+```
+
+
+## Calibrating the demand parameters
+
+Suppose now that the equilibrium pre-merger prices and shares are observed, and at least some firms costs are also known, but that the demand parameters need to be obtained in order to conduct a merger simulation. In some cases, the appropriate data and exogenous variation exists such that the demand parameters can be estimated. But other times, it may be difficult to do so credibly, or there may be insufficient time. In such cases, it can be informative to recover demand parameters that are implied by an assumed model of competition for the observed prices and shares to be an equilibrium.
+
+For the Bertrand model, calibration can be done based on the first-order conditions and share equations. There are $J$ pricing equations and $J$ share equations, for a total of $2*J$ equations. In terms of unknown parameters, we have $J$ unknown $\delta_j$'s and one price coefficient $\alpha$, for a total of $J+1$ unknown parameters. This means that the model is over-identified for calibration purposes.
+
+Because the model is over-identified, we use a weighting matrix to assign relative weights to the pricing equations and the share equations. Define an objective function to calibrate the Bertrand model, similar to the function defined above, except that now the demand parameters are the parameters to optimize over, and the prices and shares are inputs to be passed to the function.
+
+Then use this function to recover the demand parameters.
+
+<!--  BBoptim() does not work here. BB fails when calibrating with use
+ of jacobian(). Need optim() -->
+
+```{r, results = "hide", warning=FALSE}
+x00 <- c(-1)
+wt_matrix <- diag(c(1,1,1,1000,1000,1000))
+
+out1 <- optim(f = bertrand_calibrate, par = x00, 
+                   own = own_pre, price = p1, 
+                   shares = share1, cost  = c_j,
+                   weight = wt_matrix)
+
+
+
+```
+
+```{r}
+
+# note that this optimization recovers the true demand parameters
+out1$par
+alpha_true
+
+delta_cal <- log(share1) - log(1-sum(share1)) - out1$par*p1
+delta_cal
+delta_true
+```
+
+With the true demand parameters, the function bertrand_foc can be used to generate post-merger equilibrium prices and shares by changing the ownership matrix, and if desired the costs can also be changed to reflect merger efficiencies.
+
+
+
+## Calibration with some unobserved costs
+
+Typically, costs might be available for only a subset of the firms included in the analysis. For example, in a merger investigation, marginal cost data might only be available from the merging firms. Suppose now that we observe the costs only for firms 1 and 2:
+```{r, eval = TRUE}
+c_obs <- c_j
+c_obs[3] <- NA
+c_obs
+```
+
+```{r, results = "hide", warning=FALSE}
+x00 <- c(-1)
+wt_matrix <- diag(c(1,1,1,1000,1000,1000))
+
+out1b <- optim(f = bertrand_calibrate, par = x00, 
+                   own = own_pre, price = p1, 
+                   shares = share1, cost  = c_obs,
+                   weight = wt_matrix)
+
+
+
+```
+
+```{r}
+
+# note that this optimization recovers the true demand parameters
+out1b$par
+alpha_true
+
+delta_cal <- log(share1) - log(1-sum(share1)) - out1b$par*p1
+delta_cal
+delta_true
+```
+
+The calibrated parameters closely match the true parameters. Again, predicted merger effects can be obtained using the bertrand_foc function and changing the ownership matrix, and if desired, the firm costs.
+
+
+
+# Second score auction
+
+The second score auction model is discussed in detail in Miller (2014) <https://doi.org/10.1016/j.ijindorg.2014.10.001>. Briefly, it assumes that firms are submitting bids to the customer, and has an equilibrium condition where suppliers' dominant strategy is to bid their costs. The customer selects the supplier that creates the greatest surplus, and the price is set to make the customer indifferent between the best option at the equilibrium price and obtaining the second best option at cost.
+
+Assuming logit demand, the pricing condition in the second score auction is given by:
+\begin{equation*}
+p_j = c_j + \frac{1}{\alpha*\sum_{k \in W_j} s_k }\log(1 - \sum_{k \in W_j} s_k)
+\end{equation*}
+where $W_j$ denotes the set of all products that are owned by the same firm that owns product $j$, including product $j$.
+
+Since we know the true parameters, we can use the margin condition from the SSA model to calculate the equilibrium shares, as well as pre-merger and post-merger prices. Therefore, we can also calculate the true price effect of the merger.
+
+```{r, eval = TRUE}
+share2 <- (exp(delta_true + alpha_true*c_j))/(1+sum(exp(delta_true + alpha_true*c_j)))
+
+p2 <- c_j + log(1 - own_pre%*%share2)/(alpha_true*own_pre%*%share2)
+p2_post <- c_j + log(1 - own_post%*%share2)/(alpha_true*own_post%*%share2)
+
+(p2_post - p2)/p2
+```
+
+
+
+## Calibrating the demand parameters
+
+Suppose now that the equilibrium pre-merger prices and shares are observed, and at least some firms costs are also known, but that the demand parameters need to be obtained in order to conduct a merger simulation.
+
+For the second score auction, calibration can be done based on the second score pricing conditions and share equations. There are $J$ pricing equations and $J$ share equations, for a total of $2*J$ equations. In terms of unknown parameters, we have $J$ unknown $\delta_j$'s and one price coefficient $\alpha$, for a total of $J+1$ unknown parameters. This means that the model is over-identified for calibration purposes.
+
+Because the model is over-identified, we use a weighting matrix to assign relative weights to the pricing equations and the share equations. The second score auction calibration function searches for demand parameters that best match model predicted shares and prices to the observed shares and prices. Specifically, the function below minimizes the squared sum of the difference between predicted and observed values, and uses the weighting matrix to assign relative weights to each equation.
+
+Rather than jointly optimizing over all of the demand parameters, it is computationally faster to first calibrate only the price coefficient $\alpha$ using the available pricing equations, and then recover the $\delta$ parameters from the share equations once the price coefficient is known.
+
+Only one good's marginal cost needs to be known to be able to calibrate the model, and often times cost information will only be readily available from merging firms. We can use ssa_calibrate to find $\alpha$ using only goods that have cost information available.
+
+Suppose that we observe only the costs of firms 1 and 2:
+```{r}
+c_obs <- c_j
+c_obs[3] <- NA
+c_obs
+```
+
+Now we calibrate $\alpha$ with the available pricing conditions:
+
+```{r}
+wt_matrix <- diag(c(1,1))
+
+result4 <- BBoptim(f = ssa_calibrate, par = c(-.2),
+                    lower = c(-Inf), upper = c(-0.0001),
+                    own=own_pre, price = p2, share = share2,
+                    cost = c_obs, weight = wt_matrix)
+
+alpha4 <- result4$par
+alpha4       # recover true value
+```
+
+With $\alpha$ recovered, we can now recover any missing costs:
+
+```{r}
+cost4 <- p2 - log(1 - own_pre%*%share2) / (alpha4*own_pre%*%share2)
+cost4
+```
+
+The recovered costs match the true costs:
+```{r}
+c_j
+```
+
+This is sufficient information to predict the effects of a merger between firms 1 and 2. The predicted effects using the calibrated parameters match the true unilateral merger effects.
+
+```{r}
+p4 <- cost4 + log(1 - own_pre%*%share2)/(alpha4*own_pre%*%share2)
+p4_post <- cost4 + log(1 - own_post%*%share2)/(alpha4*own_post%*%share2)
+
+(p4_post - p4)/p4
+```
+
+Note that if the cost is observed for only one product, the model is exactly identified, and the true price coefficient parameter $\alpha$ can be calculated analytically. For example, the calculation below recovers the true price coefficient assuming that only the cost/margin of product 1 is available. The optimizer used above is useful when margins are available for more than one product.
+
+```{r}
+1/(p4[1] - c_obs[1]) * log(1 - share2[1]) / share2[1]
+```
+
+
+# Traditional Bargaining Model (nests Bertrand)
+
+For now, we skip the mathematical framework for the bargaining models, but the equations are given in many papers including Panhans and Taragin (2023). Instead, in this document we focus on defining functions that will allow us to generate equilibrium prices and shares, and then recover the true demand parameters from those equilibrium objects. We first consider a traditional bargaining setup that nests the Bertrand model.
+
+Let's assume the demand parameters specified above are the true demand parameters, and generate equilibrium market characteristics.
+
+```{r}
+x0 <- c_j*1.5
+
+out3 <- multiroot(f = bargain_foc, start = x0, own = own_pre, 
+                  alpha = alpha_true, delta = delta_true, cost = c_j,
+                  lambda = 0.5)
+p3 <- out3$root
+share3 <- (exp(delta_true + alpha_true*p3))/(1+sum(exp(delta_true + alpha_true*p3)))
+
+print(p3)
+print(share3)
+
+```
+
+
+## Calibration
+
+The calibration function can be used to recover the demand parameters from these prices, shares, and costs.
+
+
+```{r, eval = TRUE}
+J <- length(c_j)
+alpha_start <- -1.2
+delta_start <- rep(1,J)
+x00 <- c(alpha_start,delta_start)
+wt_matrix <- diag(J*2)
+
+
+bargain_calibrate(param = x00, 
+                       own = own_pre, price = p3, 
+                       shares = share3, cost  = c_j,
+                       weight = wt_matrix, lambda = 0.5)
+
+
+out3 <- BBoptim(f = bargain_calibrate, par = x00, 
+                own = own_pre, price = p3, 
+                shares = share3, cost  = c_j,
+                weight = wt_matrix, lambda = 0.5)
+
+# check if we recovered correct demand parameters
+# finding good initial values is important.
+alpha3 <- out3$par[1]
+delta3 <- out3$par[2:4]
+alpha_true
+alpha3
+delta_true
+delta3
+```
+
+
+
+# Alternative Bargaining Model (nests SSA)
+
+Next, we consider an alternative bargaining setup that nests the second score auction.
+
+Let's assume the demand parameters specified above are the true demand parameters, and generate equilibrium market characteristics.
+
+
+
+```{r}
+x0 <- c_j*1.5
+
+out4 <- multiroot(f = ssbargain_foc, start = x0, own = own_pre, 
+                       alpha = alpha_true, delta = delta_true, 
+                  cost = c_j, lambda = 0.5)
+p4 <- out4$root
+share4 <- (exp(delta_true + alpha_true*c_j))/(1+sum(exp(delta_true + alpha_true*c_j)))
+
+print(p4)
+print(share4)
+
+```
+
+
+Then we can use the calibration function to recover the demand parameters from these prices, shares, and costs.
+
+
+```{r}
+alpha_start <- -1.2
+delta_start <- rep(1,J)
+x00 <- c(alpha_start,delta_start)
+wt_matrix <- diag(J*2)
+
+out4 <- BBoptim(f = ssbargain_calibrate, par = x00, 
+                own = own_pre, price = p4, 
+                shares = share4, cost  = c_j,
+                weight = wt_matrix, lambda = 0.5)
+
+# check if we recovered correct demand parameters
+# finding good initial values is important.
+alpha4 <- out4$par[1]
+delta4 <- out4$par[2:4]
+alpha_true
+alpha4
+delta_true
+delta4
+```
+
+
+
+
+# Generalized Nested Logit (GNL) Demand
+
+All of the models above have been implemented with the standard logit demand assumption. The same functions can be used to implement a Generalized Nested Logit demand system, which allows for overlapping nests and includes nested logit and standard logit as special cases.
+
+Here, I'll illustrate the implementation of GNL with the Bertrand model.
+
+## Bertrand
+
+First, we define the GNL structure. $K$ indicates the number of nests. $B$ indicates the nests each good belongs to: row $j$ column $k$ is 1 if good $j$ belongs to nest $k$. $a$ is a matrix of the same dimension as $B$ that designates each good's degree of membership in each nest. For ease of interpretation, the rows of $a$ should sum to 1 (meaning each good should have a member degree in each of its nests that sum to 1). $\mu$ is a vector of length $K$ that represents the nesting parameter for each nest.
+
+```{r}
+K1 <- 2
+
+B1 <- 1 * matrix( c(1,0,
+               1,0,
+               0,1),
+             ncol = K1, nrow = J, byrow = TRUE)
+a1 <- B1    # rows of a should sum to 1 to facilitate interpretation.
+mu1 <- rep(1.0,K1) # nesting parameters all 1 simplifies to logit
+mu2 <- c(0.8,0.8)
+```
+
+We will skip calibration and assume we have the true demand parameters, and just need to simulate the equilibrium.
+
+First, let's use the GNL function but input values for logit demand and show that we get the same answer that we got above.
+
+```{r, results = "hide"}
+
+x0 <- p1*1.1
+
+out1 <- BBoptim(fn = bertrand_foc, par = x0, 
+                own = own_pre, alpha = alpha_true, 
+                delta = delta_true, cost = c_j, sumFOC = TRUE)
+
+p_R1 <- out1$par
+```
+
+```{r, eval = FALSE}
+# Equilibrium prices are the same as we had from logit model before
+p_R1
+p1
+  
+```
+
+But when we provide the function with the GNL structure that is different than the standard logit, we get a different result.
+
+```{r, results = "hide"}
+
+x0 <- p1*1.1
+
+out2 <- BBoptim(fn = bertrand_foc, par = x0, 
+                own = own_pre, alpha = alpha_true, 
+                delta = delta_true, cost = c_j,
+                nest_allocation=a1, mu=mu2,
+                sumFOC = TRUE)
+
+p_R2 <- out2$par
+```
+
+```{r}
+# Equilibrium prices are different than logit result
+p_R2
+  
+```
+
+It may sometimes also be useful to have a function that computes a diversion ratio matrix. Note that for nested logit and generalized nested logit, diversion ratios computed based on a marginal price increase are different than those computed from removing a choice from the choice set. See Conlon and Mortimer (2021) ``Empirical Properties of Diversion Ratios'' for more details.
+
+This function can be used to obtain a diversion ratio matrix.
+
+```{r}
+diversions <- diversion_calc(price=p_R2,alpha=alpha_true,delta=delta_true,
+                             nest_allocation=a1,mu=mu2)
+
+diversions
+rowSums(diversions) # each row should sum to <1 because of outside option
+```
+
+The above diversion ratio matrix is based on average diversion rates, which are computed based on removing a product from the choice set. Alternatively, one may be interested in marginal diversion ratios, which are the diversion rates based on a marginal increase in price for a good. For a standard logit demand system, these two diversion ratios are identical. But for more general demand systems, these two diversion ratios will not be identical. The marginal diversion can be computed by using the 'marginal' option in the function.
+
+```{r}
+diversions2 <- diversion_calc(price=p_R2,alpha=alpha_true, delta=delta_true,
+                              nest_allocation=a1, mu=mu2, marginal = TRUE)
+
+diversions2
+rowSums(diversions2) # each row should sum to <1 because of outside option
+```
+
+
+

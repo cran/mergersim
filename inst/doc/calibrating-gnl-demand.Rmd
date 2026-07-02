@@ -1,0 +1,368 @@
+---
+title: "Calibrating generalized nested logit (GNL) demand"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{calibrating-gnl-demand}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Introduction
+
+This vignette illustrates how to calibrate a generalized nested logit (GNL) demand system assuming a differentiated product Bertrand price-setting model of competition. The notation follows Chapter 4 of Train 2000. The functions used here can be used to replicate the results in Panhans and Wiemer 2025. For further details, see that paper and Wen and Koppelman (2001) "The generalized nested logit model" <https://doi.org/10.1016/S0191-2615(00)00045-X>.
+
+We begin with load packages that will be useful. BB and rootSolve are packages with optimization tools. The package numDeriv is needed for the jacobian() function.
+
+```{r setup}
+library(mergersim)
+```
+
+```{r}
+library(BB)
+library(rootSolve)
+library(numDeriv)
+```
+
+In this document, we will assume a market with a set of $J$ products available. Consumer $i$ has utility for good $j$:
+\begin{equation*}
+u_{ij} = \delta_j + \alpha p_j + \varepsilon_{ij}
+\end{equation*}
+
+We assume that the analyst have available market-level data on the products prices, shares, and at least some information on diversion ratios among the products. Also, cost information is available from at least some of the products.
+
+The allocation of products into nests will be given and assumed to be known. The goal of the calibration exercise will be to recover the demand parameters and calibrated costs that best match the model predicted prices, shares, and diversions to the observed values. In particular, marginal costs for each product will be calibrated, as well as the following demand parameters: the price coefficient $\alpha$, the product mean values $\delta_j$, and the nesting parameters $\mu \in [0,1]$.
+
+This vignette will consider two examples, first a nested logit demand structure, and then a generalized logit demand structure with overlapping nests.
+
+
+# Nested Logit
+
+## Set up scenario
+
+
+```{r}
+
+alpha_true  <- -0.9
+delta_true <- c(0.9, 0.9, 1.5, rep(3.0, 2)) + 3.5
+c_j <- c(rep(2.3,2), 2.7, rep(3.7,2))
+J <- 5
+
+own_pre = diag(J)
+own_post <- own_pre
+own_post[1,2] <- 1
+own_post[2,1] <- 1
+own_post[1,3] <- 1
+own_post[3,1] <- 1
+own_post[2,3] <- 1
+own_post[3,2] <- 1
+
+K1 <- 2
+
+B1 <- 1 * matrix( c(1,0,
+                    1,0,
+                    1,0,
+                    0,1,
+                    0,1),
+                  ncol = K1, nrow = J, byrow = TRUE)
+a1 <- B1    # rows of a should sum to 1 to facilitate interpretation.
+mu1 <- rep(1.0,K1) # nesting parameters all 1 simplifies to logit
+mu2 <- c(0.7,0.7)
+
+
+x0 <- c_j*1.1
+
+out1 <- BBoptim(fn = bertrand_foc, par = x0,
+                own = own_pre, alpha = alpha_true,
+                delta = delta_true, cost = c_j,
+                nest_allocation=a1,mu=mu2,
+                sumFOC = TRUE)
+
+p_R1 <- out1$par
+p_R1
+
+shares1 <- share_calc(price=p_R1,delta=delta_true,alpha=alpha_true,
+                      nest_allocation=a1,mu=mu2)
+shares1
+sum(shares1)
+
+true_div <- diversion_calc(p=p_R1,alpha=alpha_true,delta=delta_true,
+                           nest_allocation=a1,mu=mu2,
+                         marginal = TRUE)
+
+```
+
+
+## Calibrate demand parameters, with full information
+
+Check that we can recover the true demand parameters when full information about substitution patterns and costs are known.
+
+```{r, results = "hide", warning=FALSE}
+
+
+wt_vector <- c(1,1,1,1)
+
+bertrand_calibrate_gnl(param = c(alpha_true,mu2),
+                            own = own_pre, price = p_R1+.1,
+                            shares = shares1, cost  = c_j,
+                            weight = wt_vector, nest_allocation=a1,
+                            div_matrix = true_div,
+                       fast_version = TRUE)
+
+
+x00 <- c(alpha_true,mu2)-.1
+
+out2 <- optim(f = bertrand_calibrate_gnl, par = x00,
+               own = own_pre, price = p_R1,
+               shares = shares1, cost  = c_j,
+               weight = wt_vector, nest_allocation=a1, 
+               div_matrix = true_div,
+              fast_version = TRUE)
+```
+
+```{r}
+out2$par[1]
+alpha_true
+out2$par[2:3]
+mu2
+
+
+```
+
+The calibrated values of the mean value parameter can be recovered in an extra step.
+
+```{r}
+
+delta_start <- log(shares1) - log(1-sum(shares1)) - out2$par[1]*p_R1
+
+out2_d <- multiroot(f = match_share, start = delta_start,
+                   price=p_R1,alpha=out2$par[1],nest_allocation=a1,
+                   mu=out2$par[2:3],
+                   shares_obs = shares1)
+
+out2_d$root
+delta_true
+
+delta_cal <- out2_d$root
+alpha_cal <- out2$par[1]
+mu_cal <- out2$par[2:3]
+
+```
+
+Finally, with calibrated demand parameters, one can check how closely the model predicted values match the observed values for prices, shares, and diversions.
+
+```{r}
+
+# How well are we matching prices and shares here?
+
+out_cal <- BBoptim(f = bertrand_foc, par = p_R1,
+                own = own_pre, alpha= alpha_cal,
+                delta = delta_cal, cost = c_j,
+                nest_allocation = a1, mu =  mu_cal,
+                sumFOC = TRUE)
+
+price_cal <- out_cal$par
+price_cal
+p_R1
+
+share_cal <- share_calc(price=price_cal,delta=delta_cal,alpha=alpha_cal,
+                        nest_allocation=a1,mu=mu_cal)
+share_cal
+shares1
+
+diversions_cal <- diversion_calc(price=price_cal,alpha=alpha_cal,
+                                 delta=delta_cal,
+                                 nest_allocation=a1,mu=mu_cal)
+
+diversions_cal
+true_div
+
+```
+
+The model values and the observed values closely coincide.
+
+
+# GNL with overlapping nests
+
+
+## Set up scenario
+
+```{r}
+alpha_true  <- -0.9
+delta_true <- rep(c(0.9, 0.9, 1.5), times = 2) + 3.5
+c_j <- rep(c(2.3, 2.3, 2.7), times = 2)
+J <- length(delta_true)
+
+own_pre <- diag(J)
+
+K3 <- 5
+
+B3 <- 1 * matrix( c(1,0,1,0,0,
+                    1,0,0,1,0,
+                    1,0,0,0,1,
+                    0,1,1,0,0,
+                    0,1,0,1,0,
+                    0,1,0,0,1),
+                  ncol = K3, nrow = J, byrow = TRUE)
+a3 <- 0.5 * B3    # rows of a should sum to 1 to facilitate interpretation.
+mu3 <- rep(0.7,K3) # nesting parameters all 1 simplifies to logit
+
+
+## Generate observed objects: prices, shares, diversions.
+
+x0 <- c_j*1.1
+
+out3 <- BBoptim(fn = bertrand_foc, par = x0,
+                own = own_pre, alpha = alpha_true,
+                delta = delta_true, cost = c_j,
+                nest_allocation=a3,mu=mu3,
+                sumFOC = TRUE)
+
+p_R3 <- out3$par
+p_R3
+
+shares3 <- share_calc(price=p_R3,delta=delta_true,alpha=alpha_true,
+                      nest_allocation=a3,mu=mu3)
+shares3
+sum(shares3)
+
+true_div <- diversion_calc(price=p_R3,alpha=alpha_true,delta=delta_true,
+                           nest_allocation=a3,mu=mu3,
+                           marginal = TRUE)
+
+```
+
+
+Now we will see if with the observed market prices, shares, diversions, and costs, we can recover the true demand parameters through calibration. We will first consider the full information case where all costs are known; after, we will consider the case where the costs of only a subset of products are available, and diversions are only known among a subset of the products.
+
+For illustration, suppose that we correctly assume that the $K=5$ nesting parameters have the same value, but we need to calibrate that value. Allowing each nesting parameter value to freely, the function can still calibrate the true values, however the code takes longer to converge. By providing the optimization function with a starting value vector with two elements, the calibration routine will assume that the analyst intends to assume all nesting parameters have the same value.
+
+
+```{r, results = "hide", warning=FALSE}
+
+#wt_vector <- c(50,10,100,200)
+wt_vector <- c(50,10,100)
+
+x00 <- c(alpha_true,mu3[1])-.2
+
+
+out3 <- optim(f = bertrand_calibrate_gnl, par = x00,
+              own = own_pre, price = p_R3,
+              shares = shares3, cost  = c_j,
+              weight = wt_vector, nest_allocation=a3, div_matrix = true_div,
+              div_calc_marginal = TRUE,
+              fast_version = TRUE,
+              control = list(maxit = 1000))
+
+```
+
+```{r}
+
+out3$par[1]
+alpha_true
+out3$par[2:length(out3$par)]
+mu3
+
+
+```
+
+And then we can check how closely the model predicted values match the observed market outcomes.
+
+```{r}
+mu_constraint_matrix <- matrix(1, nrow = K3, ncol = 1)
+mu_cal <- mu_constraint_matrix %*% out3$par[2]
+
+delta_start <- log(shares3) - log(1-sum(shares3)) - out3$par[1]*p_R3
+
+out3b <- multiroot(f = match_share, start = delta_start,
+                    price=p_R3,alpha=out3$par[1],nest_allocation=a3,
+                   mu=mu_cal,
+                    shares_obs = shares3)
+
+out3b$root
+delta_true
+
+delta_cal <- out3b$root
+alpha_cal <- out3$par[1]
+
+
+
+## See how well we are matching observables
+
+
+out_cal <- BBoptim(f = bertrand_foc, par = p_R3 - .4,
+                   own = own_pre, alpha= alpha_cal,
+                   delta = delta_cal, cost = c_j,
+                   nest_allocation = a3, mu =  mu_cal,
+                   sumFOC = TRUE)
+
+price_cal <- out_cal$par
+price_cal
+p_R3
+
+share_cal <- share_calc(price=p_R3,delta=delta_cal,alpha=alpha_cal,
+                        nest_allocation=a3,mu=mu_cal)
+share_cal
+shares3
+
+diversions_cal <- diversion_calc(price=p_R3,alpha=alpha_cal,delta=delta_cal,
+                                 nest_allocation=a3,mu=mu_cal)
+
+diversions_cal
+true_div
+
+```
+
+
+
+Finally, let's see if we can recover the true demand parameters with missing information on costs and diversions. For this case, we will also use mu_constraints to restrict the number of freely varying nesting parameters to two.
+
+```{r}
+
+# Create limited data objects
+c_j_NA <- rep(NA, J)
+c_j_NA[1] <- c_j[1]
+
+true_div_NA <- NA * true_div
+true_div_NA[1,] <- true_div[1,]
+
+```
+
+We can still recover the true demand parameters even if some costs and diversions are missing.
+
+```{r, results = "hide", warning=FALSE}
+
+# calibration
+x00 <- c(alpha_true,0.7,0.7)-.2
+
+mu_constraints <- matrix(c(1,1,0,0,0,0,0,1,1,1), nrow = 5, ncol = 2)
+
+out4 <- optim(f = bertrand_calibrate_gnl, par = x00,
+              own = own_pre, price = p_R3,
+              shares = shares3, cost  = c_j_NA,
+              weight = wt_vector, nest_allocation=a3, 
+              div_matrix = true_div_NA,
+              mu_constraint_matrix = mu_constraints,
+              fast_version = TRUE,
+              control = list(maxit = 1000) )
+
+```
+
+```{r}
+out4$par[1]
+alpha_true
+out4$par[2:3]
+mu3
+
+```
+
+
+
+

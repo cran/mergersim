@@ -1,0 +1,536 @@
+---
+title: "Vertical merger simulations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{vertical-merger-simulations}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+# Introduction
+
+A model of a vertical supply chain like in Sheu and Taragin (2021) ``Simulating mergers in a vertical supply chain with bargaining'' can be used to evaluate effects of vertical mergers. That model uses a simultaneous timing assumption for equilibrium. This document shows how to calibrate the model and implement a merger simulation.
+
+## Preliminaries
+
+First, we load packages that will be useful. BB and rootSolve are packages with optimization tools.
+
+```{r}
+library(mergersim)
+
+library(BB)
+library(rootSolve)
+library(antitrust)
+library(numDeriv)  # for jacobian() function
+```
+
+Consider a market where $W$ denotes the set of wholesalers and $R$ denotes the set of retailers. Denote a specific wholesaler by $w$ and a specific retailer by $r$. It will also be useful to define $R^w$ as the set of retailers that carry $w$'s products, and $W^r$ is the set of wholesalers that supply retailer $r$. For simplicity, we will assume in this exercise that before any mergers occur, each wholesaler supplies only one product. 
+
+Final consumers are indexed by $i$ and select one retailer at which to purchase one wholesaler's product. The utility received by consumer $i$ for purchasing from retailer $r$ the product owned by wholesaler $w$ is given by:
+
+\begin{equation*}
+u_{irw} = \delta_{rw} + \alpha p_{rw} + \varepsilon_{irw}
+\end{equation*}
+
+Where $\alpha < 0$ is the price sensitivity and we assume that the idiosyncratic error term follows the type 1 extreme value distribution. 
+
+In the example, we will assume that there are $|W|=2$ wholesalers and $|R|=3$ retailers. Each good $j$ is a retailer-wholesaler combination.
+
+```{r}
+alpha  <- -0.9
+R <- 3
+W <- 2
+delta <- c(0.2, 0.3, 0.9, 1.0, 0.8, 0.9)
+c_R_vec <- matrix(.1, nrow = (R*W), ncol = 1)
+c_W_vec <- matrix(.2, nrow = (R*W), ncol = 1)
+```
+
+There is also an outside option which is normalized to have $\delta_{00} = p_{00} = 0$.
+
+Suppose that before any merger occurs, all retailers and suppliers are independently owned. And suppose we are investigating a potential merger between retailer $r_1$ and wholesaler $w_1$. Then, we can create ownership vectors to reflect the pre-merger market.
+
+
+```{r}
+# Define market structure/ownership
+own_down_pre <- paste0("R",rep(c(1,2,3),each=2))
+own_up_pre <- paste0("W",rep(c(1,2),3))
+own_down_pre
+own_up_pre
+```
+
+
+# Theoretical Framework
+
+## Downstream Bertrand Competition
+
+The Bertrand model of competition posits that downstream retailers offer differentiated products and compete on the basis of price setting. In particular, for a retailer $r$ that offers product portfolio $W^r$, specify the profit function as:
+
+\begin{equation*}
+\Pi^r = \sum_{w \in W^r} (p_{rw} - p^W_{rw} - c^R_{rw}) \cdot s_{rw} \cdot M 
+\end{equation*}
+
+Which yields a first order condition:
+
+\begin{equation}
+\sum_{x \in W^r} (p_{rx} - p^W_{rx} - c^R_{rx}) \cdot \frac{\partial s_{rx}}{\partial p_{rw}} + s_{rw} = 0
+\end{equation}
+
+
+This system of FOC's can be expressed in matrix notation. Each retailer-wholesaler pair can be denoted as a distinct product, $j = (r,w)$, and $J$ denotes the total number of products. Let $\Omega^R$ denote the J-by-J ownership matrix of downstream products, $t(dd)$ denotes the transpose of a matrix where element $(j,k)$ equals $\frac{\partial s_j}{\partial p_k}$, $m$ is vector length $J$ of margins where the jth element is $(p_j - p^W_j- c_j)$, and $s$ is a vector of length $J$ of product market shares. Then the stacked FOC's can be denoted as:
+
+\begin{equation*}
+0 = (\Omega^R * t(dd)) \%*\% m + s
+\end{equation*}
+
+We can use the true demand parameters and marginal costs to determine the equilibrium prices and shares. First, define the Bertrand FOC function. Then use multiroot to find the equilibrium prices that set the FOCs to zero:
+
+```{r} 
+p_W_vec <- matrix(.25, nrow = (R*W), ncol = 1)  # dummy wholesale prices
+
+p_r_start <- c_R_vec*1.1
+out1 <- multiroot(f = mergersim:::bertrand_foc_novert ,start = p_r_start, 
+                  own_down = own_down_pre, alpha= alpha, 
+                  delta = delta, cost = c_R_vec,
+                  price_w = p_W_vec)
+
+p1 <- out1$root
+p1
+
+```
+
+As an alternative to multiroot, you could also use BBoptim to find the prices that satisfy the first-order conditions. With data consistent with the model, both methods should yield the same equiblrium prices. It is possible that with some observed data, BBoptim provides a more robust search for equilibrium values.
+
+```{r} 
+
+p_r_start <- as.numeric(c_R_vec*1.1)
+out1b <- BBoptim(f = mergersim:::bertrand_foc_novert, par = p_r_start, 
+                  own_down = own_down_pre, alpha= alpha, 
+                  delta = delta, cost = c_R_vec,
+                  price_w = p_W_vec, sumFOC = TRUE)
+
+p1b <- out1b$par
+p1b
+
+```
+
+
+
+## Upstream Bargaining
+
+The upstream involves bilateral Nash-in-Nash bargaining between each retailer and wholesaler. Wholesaler payoffs are given as:
+
+\begin{equation*}
+\Pi^w = \sum_{r \in R^w} ( p^W_{rw} - c^W_{rw}) \cdot s_{rw} \cdot M 
+\end{equation*}
+
+For each retailer-wholesaler pair $(r,w)$, the Nash bargaining objective function is then given by:
+\begin{equation*}
+\max_{p^W_{rw}} \left( \Pi^r - d^r(W^r/\{w\}) \right)^\lambda \cdot \left( \Pi^w - d^w(R^w/\{r\}) \right)^{1-\lambda}
+\end{equation*}
+
+where $d^r$ and $d^w$ denote the disagreement payoff for retailer $r$ and wholesaler $w$, respectively. Equilibrium wholesale prices $p^W$ are those that maximize this objective function. The first order condition can be used to find the equilibrium prices:
+
+\begin{equation}
+\left( p^W_{rw} - c^W_{rw} \right) \cdot s_{rw} - \sum_{t \in R^w / \{r\}} ( p^W_{tw} - c^W_{tw} ) \cdot \Delta s_{tw} = \frac{1-\lambda}{\lambda} \left(  (p_{rw} - p^W_{rw} - c^R_{rw}) \cdot s_{rw} - \sum_{x \in W^r / \{w\}} (p_{rx} - p^W_{rx} - c^R_{rx}) \cdot \Delta s_{rx} \right)
+\end{equation}
+
+where $\Delta s_{tw}$ is defined as the increase in the share of $s_{tw}$ that occurs as a result of disagreement between $(r,w)$.
+
+We write a function to define the bargaining first order conditions.
+
+And then with placeholder retail prices, we can then use this first order condition to find equilibrium wholesale prices.
+
+```{r}
+lambda <-  0.5
+
+x0 <- as.numeric(c_W_vec*1.0)
+
+mergersim:::bargain_foc_novert_sim(price_w = x0, own_down = own_down_pre, own_up = own_up_pre, 
+         alpha= alpha, delta = delta, 
+         cost_w = c_W_vec, cost_r = c_R_vec, 
+         lambda = lambda, price_r = (p1*2))
+
+out2 <- BBoptim(par = x0, fn = mergersim:::bargain_foc_novert_sim, 
+                own_down = own_down_pre, own_up = own_up_pre,
+                alpha= alpha, delta = delta, 
+                cost_w = c_W_vec, cost_r = c_R_vec, 
+                lambda = lambda, price_r = (p1*1))
+
+out2$par
+
+p_W2 <- out2$par
+shares2 <- (exp(delta + alpha*p1))/(1+sum(exp(delta + alpha*p1)))
+
+```
+
+In equilibrium, retail prices and wholesale prices need to be jointly determined. The functions defined above can be solved simultaneously to find equilibrium retail and wholesale prices of the model.
+
+```{r, results = "hide", warning=FALSE, include=FALSE}
+tol <- .0001
+error <- 1
+
+p_W0 <- matrix(.25, nrow = (R*W), ncol = 1)  # dummy wholesale prices
+p_R0 <- p_r_start
+  
+while (error > tol) {
+
+  # use EITHER multiroot OR BBoptim to solve for downstream prices
+  # multiroot:
+  # out1 <- multiroot(f = bertrand_foc_novert ,start = p_R0, 
+  #                 own_down = own_down_pre, alpha= alpha, 
+  #                 delta = delta, cost = c_R_vec,
+  #                 p_W = p_W0)
+  # 
+  # p_R1 <- out1$root
+  # BBoptim:
+  out1 <- BBoptim(f = mergersim:::bertrand_foc_novert, par = p_R0, 
+                  own_down = own_down_pre, alpha= alpha, 
+                  delta = delta, cost = c_R_vec,
+                  price_w = p_W0, sumFOC = TRUE)
+
+  p_R1 <- out1$par
+  
+  out2 <- BBoptim(par = as.numeric(p_W0), fn = mergersim:::bargain_foc_novert_sim, 
+                  own_down = own_down_pre, own_up = own_up_pre, 
+                  alpha= alpha, delta = delta, 
+                  cost_w = c_W_vec, cost_r = c_R_vec, lambda = lambda, 
+                  price_r = p_R1)
+
+  p_W1 <- out2$par
+  
+  error <- max(abs(c(p_W1-p_W0,p_R1-p_R0)))
+  print(error)
+  
+  p_W0 <- p_W1
+  p_R0 <- p_R1
+}
+```
+
+```{r}
+# Check if values make sense
+print(p_R1)
+print(p_W1)
+
+shares1 <- (exp(delta + alpha*p_R1))/(1+sum(exp(delta + alpha*p_R1)))
+as.numeric(shares1)
+sum(shares1)
+
+# GFT
+mergersim:::bargain_foc_novert_sim(price_w = p_W1, own_down = own_down_pre, own_up = own_up_pre, 
+         alpha= alpha, 
+         delta = delta, cost_w = c_W_vec, cost_r = c_R_vec, lambda = lambda, 
+         price_r = p_R1,
+         returnGFT = TRUE)
+
+# wholesaler profits
+#as.numeric(own_W_pre %*% ((p_W1 - c_W_vec)*shares1) )
+
+# retailer profits
+#as.numeric(own_R_pre %*% ((p_R1 - p_W1 - c_R_vec)*shares1) )
+```
+
+## FOCs with Vertical Integration
+
+The first order conditions need to be adjusted when there is vertical integration. Let's adjust the FOCs to account for vertical integration between retailer 1 and wholesaler 1.
+
+And then use these to determine equilibrium prices in a post-merger market.
+
+```{r}
+
+# Create post ownership
+own_up_post <- own_up_pre
+own_down_post <- own_down_pre
+own_down_post[own_down_post == "R1"] <- "W1"
+
+bertrand_foc_vert(price_r = p_R1,own_down=own_down_post,own_up=own_up_post,
+          alpha=alpha,delta=delta,
+          cost_r = c_R_vec, price_w = p_W1, cost_w = c_W_vec)
+
+
+bargain_foc_vert_sim(price_w = p_W1,own_down=own_down_post,own_up=own_up_post,
+          alpha=alpha,delta=delta, cost_w =c_W_vec,
+          cost_r =c_R_vec, lambda=0.5, price_r = p_R1)
+
+
+# Test that foc_vert gives same result as before when VI = 0.
+mergersim:::bargain_foc_novert_sim(price_w = p_W1, own_down = own_down_pre, own_up = own_up_pre, 
+         alpha= alpha, delta = delta, cost_w = c_W_vec, 
+         cost_r = c_R_vec, lambda = lambda, price_r = p_R1)
+
+bargain_foc_vert_sim(price_w = p_W1,own_down=own_down_pre,own_up=own_up_pre,
+          alpha=alpha,delta=delta, cost_w =c_W_vec,
+          cost_r =c_R_vec, lambda=0.5, price_r = p_R1)
+
+# And for upstream
+bertrand_foc_vert(price_r = p_R1, own_down = own_down_pre, own_up = own_up_pre,
+          alpha = alpha, delta = delta,
+          cost_r = c_R_vec, price_w = p_W1, 
+          cost_w = c_W_vec)
+
+mergersim:::bertrand_foc_novert(price_r = p_R1, own_down = own_down_pre, alpha = alpha, 
+         delta = delta, cost = c_R_vec, price_w = p_W1)
+  
+```
+
+
+# Calibrating the demand parameters
+
+Calibration takes place in two steps. First, we use the downstream model to calibrate demand parameters. Then we will use the upstream model to calibrate the bargaining weight. In this code, we require the assumption that pre-merger there is no vertical integration, and that all relevant costs are observed. It is, however, possible to calibrate the model using cost data from only one downstream and one upstream firm.
+
+## When all costs are observed
+
+First we define a function to calibrate the downstream model of Bertrand competition.
+
+Our goal is to see if we can recover the underlying demand parameters based on the observed market shares and retail prices. Note that costs in the downstream include both retailer costs and the wholesale price paid by the retailer for the goods.
+
+```{r, results = "hide", warning=FALSE}
+J <- length(p_R1)
+alpha_start <- -1
+delta_start <- rep(0.5,J)
+x00b <- -1.1
+wt_matrix <- diag(c(rep(1,J),rep(10,J)))
+
+c_j <- c_R_vec  # eventually remove c_j from code
+
+out3 <- BBoptim(f = bertrand_vert_calibrate, par = x00b, 
+                   own_down = own_down_pre, price = p_R1, 
+                   shares = shares1, cost  = c_j, price_w = p_W1)
+
+
+```
+
+
+```{r}
+
+alpha3 <- out3$par
+delta3 <- log(shares1) - log(1-sum(shares1)) - alpha3*p_R1
+
+# recover true parameters
+alpha
+delta
+alpha3
+delta3
+
+```
+
+The calibrated demand parameters match the true parameter values.
+
+```{r}
+# note that this optimization recovers the true demand parameters and shares
+
+shares3 <- (exp(delta3 + alpha3*p_R1))/(1+sum(exp(delta3 + alpha3*p_R1)))
+shares3
+as.numeric(shares1)
+```
+
+Next, we calibrate the upstream market, which in particular requires recovering the bargaining weight. If all relevant costs are observed, the only remaining parameter to recover is the bargaining weight, which we can recover from the gains from trade of the bargaining model. First we define the calibration function bargain_vert_sim_calibrate.
+
+
+And next see if we can recover the true bargaining weight
+
+```{r, results = "hide", warning=FALSE}
+lambda_start <- 0.4   # starting value for lambda 
+
+out4 <- BBoptim(f = bargain_vert_sim_calibrate, par = lambda_start, 
+                price_w = p_W1,own_down = own_down_pre,
+                own_up =own_up_pre,alpha=alpha3,delta=delta3,
+                cost_w = c_W_vec, cost_r = c_R_vec, price_r = p_R1,
+                lower = 0, upper = 1)
+```
+
+```{r}
+lambda_end <- out4$par
+lambda_end
+```
+
+
+
+## When some costs are unobserved
+
+The functions above assume all costs are observed. Functions that end with the number 2 are modified versions that can accept missing costs.
+
+
+
+Suppose that we only observed costs from one downstream firm. We can use these functions to still recover the true demand parameters.
+
+```{r}
+# Set some costs to NA -- (this line not fully general yet)
+c_R_vec_NA <- c(c_R_vec[own_down_pre == "R1"], NA, NA, NA, NA)
+
+
+x00b <- -1.1
+bertrand_vert_calibrate(param = x00b, 
+                   own_down = own_down_pre, price = p_R1, 
+                   shares = shares1, cost  = c_R_vec_NA, price_w = p_W1 )
+
+
+out3d <- BBoptim(f = bertrand_vert_calibrate, par = x00b, 
+                   own_down = own_down_pre, price = p_R1, 
+                   shares = shares1, cost  = c_R_vec_NA, price_w = p_W1)
+
+alpha3d <- out3d$par
+delta3d <- log(shares1) - log(1-sum(shares1)) - alpha3d*p_R1
+
+# still recover true parameters
+alpha
+delta
+alpha3d
+delta3d
+
+```
+
+Then one can use the demand parameters and first order conditions to back out the implied values for the missing cost information.
+
+``` {r,results = "hide", warning=FALSE}
+
+
+x00b <- rep(1,J)
+mergersim:::bertrand_vert_calibrate_costs(param = x00b, 
+                   own_down = own_down_pre, price = p_R1, 
+                   shares = shares1, alpha = alpha, delta = delta,
+                   price_w = p_W1 )
+
+
+out3e <- BBoptim(f = mergersim:::bertrand_vert_calibrate_costs, par = x00b, 
+                   own_down = own_down_pre, price = p_R1, 
+                   shares = shares1, alpha = alpha, delta = delta,
+                   price_w = p_W1)
+```
+
+```{r}
+out3e$par
+c(c_R_vec)
+
+```
+
+
+
+## On model fit
+
+When data is inconsistent with this model, even the best fitting calibrated demand parameters will not perfectly match the model prices and shares to the observed prices and shares. 
+
+Note that in this case, when data is generated from the model, there is a near perfect positive correlation between downstream prices and downstream margins. If data being input into this model does not exhibit a positive correlation between downstream margins and shares, this model will have a difficult time calibrating parameters to match the data.
+
+```{r}
+shares1
+m_downstream <- p_R1 - c_R_vec - p_W1
+
+cor(shares1,m_downstream)
+# plot(shares1,m_downstream)
+
+```
+
+# Predicting Merger Effects
+
+Once the true underlying parameters have been recovered, the ownership matrices can be changed to predict the effects of vertical integration in the market.
+
+```{r,results = "hide", warning=FALSE}
+# ( Ideally, first recover pre-merger prices, using VI functions.)
+
+bertrand_foc_vert(price_r=p_R1,own_down=own_down_post,own_up=own_up_post,
+          alpha=alpha,delta=delta,
+          cost_r=c_R_vec,price_w=p_W1, cost_w=c_W_vec)
+
+bargain_foc_vert_sim(price_w=p_W1,own_down = own_down_post,own_up=own_up_post,
+          alpha=alpha,delta=delta, cost_w=c_W_vec,
+          cost_r=c_R_vec, lambda=0.5, price_r = p_R1)
+
+tol <- .0001
+error <- 1
+
+p_W0_post <- matrix(.25, nrow = (R*W), ncol = 1)  # dummy wholesale prices
+p_R0_post <- p_r_start
+  
+while (error > tol) {
+
+  # Use EITHER multiroot or BBoptim
+  # multiroot:
+  # out1 <- multiroot(f = bertrand_foc_vert ,start = p_R0_post, 
+  #                 own_down = own_down_post, own_up = own_up_post,
+  #                 alpha = alpha3, delta = delta3, c_R = c_R_vec, 
+  #                 p_W = p_W0_post, c_W = c_W_vec)
+  # 
+  # p_R1_post <- out1$root
+  # BBoptim:
+  out1 <- BBoptim(f = bertrand_foc_vert, par = p_R0_post, 
+                  own_down = own_down_post, own_up = own_up_post,
+                  alpha = alpha3, delta = delta3, cost_r = c_R_vec, 
+                  price_w = p_W0_post, cost_w = c_W_vec, sumFOC = TRUE)
+
+  p_R1_post <- out1$par
+  
+  out2 <- BBoptim(par = as.numeric(p_W0_post), fn = bargain_foc_vert_sim, 
+                  own_down = own_down_post, own_up = own_up_post, 
+                  alpha= alpha3, delta = delta3, 
+                  cost_w = c_W_vec, cost_r = c_R_vec, lambda = lambda_end, 
+                  price_r = p_R1_post)
+  
+  p_W1_post <- out2$par
+  
+  error <- max(abs(c(p_W1_post-p_W0_post,p_R1_post-p_R0_post)))
+  print(error)
+  
+  p_W0_post <- p_W1_post
+  p_R0_post <- p_R1_post
+}
+```
+
+```{r}
+p_R1
+p_W1
+p_R1_post
+p_W1_post
+
+# retail price change with vertical integration
+(p_R1_post-p_R1)/p_R1
+
+```
+
+
+# Comparison to 'antitrust' package
+
+We can also show that the R package 'antitrust' can be used to recover the same true demand parameters.
+
+```{r}
+shareDown <- as.numeric(shares1)
+priceDown <- as.numeric(p_R1)
+ownerPreDown <- own_down_pre
+priceUp <- as.numeric(p_W1)
+ownerPreUp <- own_up_pre
+priceOutSide <- 0
+
+# Downstream margin as a percent
+marginDown <- (priceDown - c_R_vec - priceUp)/ priceDown
+# Upstream margin as a percent
+marginUp <- (priceUp - c_W_vec) / priceUp
+
+## Simulate a vertical merger
+ownerPostUp <- own_up_post
+ownerPostDown <- own_down_post
+
+simres_vert <- vertical.barg(sharesDown =shareDown,
+                             pricesDown = priceDown,
+                             marginsDown = as.numeric(marginDown),
+                             ownerPreDown = ownerPreDown,
+                             ownerPostDown = ownerPostDown,
+                             pricesUp = priceUp,
+                             marginsUp = as.numeric(marginUp),
+                             ownerPreUp = ownerPreUp,
+                             ownerPostUp = ownerPostUp,
+                             priceOutside = priceOutSide)
+
+summary(simres_vert)
+
+simres_vert@down@slopes
+
+(simres_vert@down@pricePost - simres_vert@down@pricePre) / simres_vert@down@pricePre
+```
+

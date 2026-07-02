@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Calibrating generalized nested logit (GNL) demand</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Calibrating generalized nested logit (GNL)
+demand</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This vignette illustrates how to calibrate a generalized nested logit
+(GNL) demand system assuming a differentiated product Bertrand
+price-setting model of competition. The notation follows Chapter 4 of
+Train 2000. The functions used here can be used to replicate the results
+in Panhans and Wiemer 2025. For further details, see that paper and Wen
+and Koppelman (2001) “The generalized nested logit model” <a href="https://doi.org/10.1016/S0191-2615(00)00045-X" class="uri">https://doi.org/10.1016/S0191-2615(00)00045-X</a>.</p>
+<p>We begin with load packages that will be useful. BB and rootSolve are
+packages with optimization tools. The package numDeriv is needed for the
+jacobian() function.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(mergersim)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(BB)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">library</span>(rootSolve)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">library</span>(numDeriv)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; Attaching package: &#39;numDeriv&#39;</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; The following object is masked from &#39;package:rootSolve&#39;:</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;     hessian</span></span></code></pre></div>
+<p>In this document, we will assume a market with a set of <span class="math inline">\(J\)</span> products available. Consumer <span class="math inline">\(i\)</span> has utility for good <span class="math inline">\(j\)</span>: <span class="math display">\[\begin{equation*}
+u_{ij} = \delta_j + \alpha p_j + \varepsilon_{ij}
+\end{equation*}\]</span></p>
+<p>We assume that the analyst have available market-level data on the
+products prices, shares, and at least some information on diversion
+ratios among the products. Also, cost information is available from at
+least some of the products.</p>
+<p>The allocation of products into nests will be given and assumed to be
+known. The goal of the calibration exercise will be to recover the
+demand parameters and calibrated costs that best match the model
+predicted prices, shares, and diversions to the observed values. In
+particular, marginal costs for each product will be calibrated, as well
+as the following demand parameters: the price coefficient <span class="math inline">\(\alpha\)</span>, the product mean values <span class="math inline">\(\delta_j\)</span>, and the nesting parameters
+<span class="math inline">\(\mu \in [0,1]\)</span>.</p>
+<p>This vignette will consider two examples, first a nested logit demand
+structure, and then a generalized logit demand structure with
+overlapping nests.</p>
+</div>
+<div id="nested-logit" class="section level1">
+<h1>Nested Logit</h1>
+<div id="set-up-scenario" class="section level2">
+<h2>Set up scenario</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>alpha_true  <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">0.9</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>delta_true <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.9</span>, <span class="fl">0.9</span>, <span class="fl">1.5</span>, <span class="fu">rep</span>(<span class="fl">3.0</span>, <span class="dv">2</span>)) <span class="sc">+</span> <span class="fl">3.5</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>c_j <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="fl">2.3</span>,<span class="dv">2</span>), <span class="fl">2.7</span>, <span class="fu">rep</span>(<span class="fl">3.7</span>,<span class="dv">2</span>))</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>J <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>own_pre <span class="ot">=</span> <span class="fu">diag</span>(J)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>own_post <span class="ot">&lt;-</span> own_pre</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>own_post[<span class="dv">1</span>,<span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>own_post[<span class="dv">2</span>,<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>own_post[<span class="dv">1</span>,<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>own_post[<span class="dv">3</span>,<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>own_post[<span class="dv">2</span>,<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>own_post[<span class="dv">3</span>,<span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>K1 <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>B1 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">*</span> <span class="fu">matrix</span>( <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>                    <span class="dv">1</span>,<span class="dv">0</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>                    <span class="dv">1</span>,<span class="dv">0</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>                    <span class="dv">0</span>,<span class="dv">1</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>                    <span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>                  <span class="at">ncol =</span> K1, <span class="at">nrow =</span> J, <span class="at">byrow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>a1 <span class="ot">&lt;-</span> B1    <span class="co"># rows of a should sum to 1 to facilitate interpretation.</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>mu1 <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fl">1.0</span>,K1) <span class="co"># nesting parameters all 1 simplifies to logit</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>mu2 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.7</span>,<span class="fl">0.7</span>)</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>x0 <span class="ot">&lt;-</span> c_j<span class="sc">*</span><span class="fl">1.1</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>out1 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">fn =</span> bertrand_foc, <span class="at">par =</span> x0,</span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">alpha =</span> alpha_true,</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>                <span class="at">delta =</span> delta_true, <span class="at">cost =</span> c_j,</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>                <span class="at">nest_allocation=</span>a1,<span class="at">mu=</span>mu2,</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>                <span class="at">sumFOC =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.110035  pgrad:  0.1133644 </span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>p_R1 <span class="ot">&lt;-</span> out1<span class="sc">$</span>par</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>p_R1</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; [1] 3.246923 3.246923 3.712136 4.880594 4.880594</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>shares1 <span class="ot">&lt;-</span> <span class="fu">share_calc</span>(<span class="at">price=</span>p_R1,<span class="at">delta=</span>delta_true,<span class="at">alpha=</span>alpha_true,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>                      <span class="at">nest_allocation=</span>a1,<span class="at">mu=</span>mu2)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>shares1</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; [1] 0.1252686 0.1252686 0.1623042 0.2731427 0.2731427</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">sum</span>(shares1)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.9591269</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>true_div <span class="ot">&lt;-</span> <span class="fu">diversion_calc</span>(<span class="at">p=</span>p_R1,<span class="at">alpha=</span>alpha_true,<span class="at">delta=</span>delta_true,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>                           <span class="at">nest_allocation=</span>a1,<span class="at">mu=</span>mu2,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>                         <span class="at">marginal =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div id="calibrate-demand-parameters-with-full-information" class="section level2">
+<h2>Calibrate demand parameters, with full information</h2>
+<p>Check that we can recover the true demand parameters when full
+information about substitution patterns and costs are known.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="fu">bertrand_calibrate_gnl</span>(<span class="at">param =</span> <span class="fu">c</span>(alpha_true,mu2),</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>                            <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R1<span class="fl">+.1</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>                            <span class="at">shares =</span> shares1, <span class="at">cost  =</span> c_j,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>                            <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a1,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>                            <span class="at">div_matrix =</span> true_div,</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>                       <span class="at">fast_version =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_true,mu2)<span class="sc">-</span>.<span class="dv">1</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>out2 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>               <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R1,</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>               <span class="at">shares =</span> shares1, <span class="at">cost  =</span> c_j,</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>               <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a1, </span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>               <span class="at">div_matrix =</span> true_div,</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>              <span class="at">fast_version =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>out2<span class="sc">$</span>par[<span class="dv">1</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>alpha_true</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>out2<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7 0.7</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>mu2</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7 0.7</span></span></code></pre></div>
+<p>The calibrated values of the mean value parameter can be recovered in
+an extra step.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>delta_start <span class="ot">&lt;-</span> <span class="fu">log</span>(shares1) <span class="sc">-</span> <span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">sum</span>(shares1)) <span class="sc">-</span> out2<span class="sc">$</span>par[<span class="dv">1</span>]<span class="sc">*</span>p_R1</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>out2_d <span class="ot">&lt;-</span> <span class="fu">multiroot</span>(<span class="at">f =</span> match_share, <span class="at">start =</span> delta_start,</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>                   <span class="at">price=</span>p_R1,<span class="at">alpha=</span>out2<span class="sc">$</span>par[<span class="dv">1</span>],<span class="at">nest_allocation=</span>a1,</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>                   <span class="at">mu=</span>out2<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>],</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>                   <span class="at">shares_obs =</span> shares1)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>out2_d<span class="sc">$</span>root</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; [1] 4.399713 4.399713 4.999711 6.499710 6.499710</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>delta_true</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="co">#&gt; [1] 4.4 4.4 5.0 6.5 6.5</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>delta_cal <span class="ot">&lt;-</span> out2_d<span class="sc">$</span>root</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>alpha_cal <span class="ot">&lt;-</span> out2<span class="sc">$</span>par[<span class="dv">1</span>]</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>mu_cal <span class="ot">&lt;-</span> out2<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]</span></code></pre></div>
+<p>Finally, with calibrated demand parameters, one can check how closely
+the model predicted values match the observed values for prices, shares,
+and diversions.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="co"># How well are we matching prices and shares here?</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>out_cal <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> bertrand_foc, <span class="at">par =</span> p_R1,</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">alpha=</span> alpha_cal,</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>                <span class="at">delta =</span> delta_cal, <span class="at">cost =</span> c_j,</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>                <span class="at">nest_allocation =</span> a1, <span class="at">mu =</span>  mu_cal,</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>                <span class="at">sumFOC =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  3.76421e-10  pgrad:  4.08898e-06</span></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="co">#&gt; Warning in spg(par = par, fn = fn, gr = gr, method = cpars[1], project =</span></span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a><span class="co">#&gt; project, : convergence tolerance satisified at intial parameter values.</span></span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>price_cal <span class="ot">&lt;-</span> out_cal<span class="sc">$</span>par</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>price_cal</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co">#&gt; [1] 3.246923 3.246923 3.712136 4.880594 4.880594</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>p_R1</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="co">#&gt; [1] 3.246923 3.246923 3.712136 4.880594 4.880594</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>share_cal <span class="ot">&lt;-</span> <span class="fu">share_calc</span>(<span class="at">price=</span>price_cal,<span class="at">delta=</span>delta_cal,<span class="at">alpha=</span>alpha_cal,</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>                        <span class="at">nest_allocation=</span>a1,<span class="at">mu=</span>mu_cal)</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>share_cal</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="co">#&gt; [1] 0.1252674 0.1252674 0.1623023 0.2731392 0.2731392</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>shares1</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.1252686 0.1252686 0.1623042 0.2731427 0.2731427</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>diversions_cal <span class="ot">&lt;-</span> <span class="fu">diversion_calc</span>(<span class="at">price=</span>price_cal,<span class="at">alpha=</span>alpha_cal,</span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>                                 <span class="at">delta=</span>delta_cal,</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>                                 <span class="at">nest_allocation=</span>a1,<span class="at">mu=</span>mu_cal)</span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>diversions_cal</span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.2279396 0.2953292 0.2217681 0.2217681</span></span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="co">#&gt; [2,] 0.2279396 0.0000000 0.2953292 0.2217681 0.2217681</span></span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="co">#&gt; [3,] 0.2491137 0.2491137 0.0000000 0.2334170 0.2334170</span></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="co">#&gt; [4,] 0.1219154 0.1219154 0.1579592 0.0000000 0.5584197</span></span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="co">#&gt; [5,] 0.1219154 0.1219154 0.1579592 0.5584197 0.0000000</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>true_div</span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.2179539 0.2823919 0.2324362 0.2324362</span></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="co">#&gt; [2,] 0.2179539 0.0000000 0.2823919 0.2324362 0.2324362</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a><span class="co">#&gt; [3,] 0.2331567 0.2331567 0.0000000 0.2482679 0.2482679</span></span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a><span class="co">#&gt; [4,] 0.1326332 0.1326332 0.1718462 0.0000000 0.5196114</span></span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a><span class="co">#&gt; [5,] 0.1326332 0.1326332 0.1718462 0.5196114 0.0000000</span></span></code></pre></div>
+<p>The model values and the observed values closely coincide.</p>
+</div>
+</div>
+<div id="gnl-with-overlapping-nests" class="section level1">
+<h1>GNL with overlapping nests</h1>
+<div id="set-up-scenario-1" class="section level2">
+<h2>Set up scenario</h2>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>alpha_true  <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">0.9</span></span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>delta_true <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="fl">0.9</span>, <span class="fl">0.9</span>, <span class="fl">1.5</span>), <span class="at">times =</span> <span class="dv">2</span>) <span class="sc">+</span> <span class="fl">3.5</span></span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>c_j <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="fl">2.3</span>, <span class="fl">2.3</span>, <span class="fl">2.7</span>), <span class="at">times =</span> <span class="dv">2</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a>J <span class="ot">&lt;-</span> <span class="fu">length</span>(delta_true)</span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a>own_pre <span class="ot">&lt;-</span> <span class="fu">diag</span>(J)</span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a>K3 <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a>B3 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">*</span> <span class="fu">matrix</span>( <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,</span>
+<span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a>                    <span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,</span>
+<span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a>                    <span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,</span>
+<span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a>                    <span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,</span>
+<span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a>                    <span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,</span>
+<span id="cb23-15"><a href="#cb23-15" tabindex="-1"></a>                    <span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb23-16"><a href="#cb23-16" tabindex="-1"></a>                  <span class="at">ncol =</span> K3, <span class="at">nrow =</span> J, <span class="at">byrow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb23-17"><a href="#cb23-17" tabindex="-1"></a>a3 <span class="ot">&lt;-</span> <span class="fl">0.5</span> <span class="sc">*</span> B3    <span class="co"># rows of a should sum to 1 to facilitate interpretation.</span></span>
+<span id="cb23-18"><a href="#cb23-18" tabindex="-1"></a>mu3 <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fl">0.7</span>,K3) <span class="co"># nesting parameters all 1 simplifies to logit</span></span>
+<span id="cb23-19"><a href="#cb23-19" tabindex="-1"></a></span>
+<span id="cb23-20"><a href="#cb23-20" tabindex="-1"></a></span>
+<span id="cb23-21"><a href="#cb23-21" tabindex="-1"></a><span class="do">## Generate observed objects: prices, shares, diversions.</span></span>
+<span id="cb23-22"><a href="#cb23-22" tabindex="-1"></a></span>
+<span id="cb23-23"><a href="#cb23-23" tabindex="-1"></a>x0 <span class="ot">&lt;-</span> c_j<span class="sc">*</span><span class="fl">1.1</span></span>
+<span id="cb23-24"><a href="#cb23-24" tabindex="-1"></a></span>
+<span id="cb23-25"><a href="#cb23-25" tabindex="-1"></a>out3 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">fn =</span> bertrand_foc, <span class="at">par =</span> x0,</span>
+<span id="cb23-26"><a href="#cb23-26" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">alpha =</span> alpha_true,</span>
+<span id="cb23-27"><a href="#cb23-27" tabindex="-1"></a>                <span class="at">delta =</span> delta_true, <span class="at">cost =</span> c_j,</span>
+<span id="cb23-28"><a href="#cb23-28" tabindex="-1"></a>                <span class="at">nest_allocation=</span>a3,<span class="at">mu=</span>mu3,</span>
+<span id="cb23-29"><a href="#cb23-29" tabindex="-1"></a>                <span class="at">sumFOC =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb23-30"><a href="#cb23-30" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.09311491  pgrad:  0.05718863 </span></span>
+<span id="cb23-31"><a href="#cb23-31" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a></span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>p_R3 <span class="ot">&lt;-</span> out3<span class="sc">$</span>par</span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>p_R3</span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a><span class="co">#&gt; [1] 3.303450 3.303450 3.756766 3.303450 3.303450 3.756766</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a>shares3 <span class="ot">&lt;-</span> <span class="fu">share_calc</span>(<span class="at">price=</span>p_R3,<span class="at">delta=</span>delta_true,<span class="at">alpha=</span>alpha_true,</span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a>                      <span class="at">nest_allocation=</span>a3,<span class="at">mu=</span>mu3)</span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a>shares3</span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a><span class="co">#&gt; [1] 0.1462555 0.1462555 0.1842412 0.1462555 0.1462555 0.1842412</span></span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">sum</span>(shares3)</span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.9535044</span></span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a></span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>true_div <span class="ot">&lt;-</span> <span class="fu">diversion_calc</span>(<span class="at">price=</span>p_R3,<span class="at">alpha=</span>alpha_true,<span class="at">delta=</span>delta_true,</span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a>                           <span class="at">nest_allocation=</span>a3,<span class="at">mu=</span>mu3,</span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a>                           <span class="at">marginal =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>Now we will see if with the observed market prices, shares,
+diversions, and costs, we can recover the true demand parameters through
+calibration. We will first consider the full information case where all
+costs are known; after, we will consider the case where the costs of
+only a subset of products are available, and diversions are only known
+among a subset of the products.</p>
+<p>For illustration, suppose that we correctly assume that the <span class="math inline">\(K=5\)</span> nesting parameters have the same
+value, but we need to calibrate that value. Allowing each nesting
+parameter value to freely, the function can still calibrate the true
+values, however the code takes longer to converge. By providing the
+optimization function with a starting value vector with two elements,
+the calibration routine will assume that the analyst intends to assume
+all nesting parameters have the same value.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a></span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a><span class="co">#wt_vector &lt;- c(50,10,100,200)</span></span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">50</span>,<span class="dv">10</span>,<span class="dv">100</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_true,mu3[<span class="dv">1</span>])<span class="sc">-</span>.<span class="dv">2</span></span>
+<span id="cb28-6"><a href="#cb28-6" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" tabindex="-1"></a></span>
+<span id="cb28-8"><a href="#cb28-8" tabindex="-1"></a>out3 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
+<span id="cb28-9"><a href="#cb28-9" tabindex="-1"></a>              <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R3,</span>
+<span id="cb28-10"><a href="#cb28-10" tabindex="-1"></a>              <span class="at">shares =</span> shares3, <span class="at">cost  =</span> c_j,</span>
+<span id="cb28-11"><a href="#cb28-11" tabindex="-1"></a>              <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a3, <span class="at">div_matrix =</span> true_div,</span>
+<span id="cb28-12"><a href="#cb28-12" tabindex="-1"></a>              <span class="at">div_calc_marginal =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb28-13"><a href="#cb28-13" tabindex="-1"></a>              <span class="at">fast_version =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb28-14"><a href="#cb28-14" tabindex="-1"></a>              <span class="at">control =</span> <span class="fu">list</span>(<span class="at">maxit =</span> <span class="dv">1000</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a></span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>out3<span class="sc">$</span>par[<span class="dv">1</span>]</span>
+<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="co">#&gt; [1] -0.8999731</span></span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a>alpha_true</span>
+<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a>out3<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(out3<span class="sc">$</span>par)]</span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.6999925</span></span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a>mu3</span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7 0.7 0.7 0.7 0.7</span></span></code></pre></div>
+<p>And then we can check how closely the model predicted values match
+the observed market outcomes.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a>mu_constraint_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">1</span>, <span class="at">nrow =</span> K3, <span class="at">ncol =</span> <span class="dv">1</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>mu_cal <span class="ot">&lt;-</span> mu_constraint_matrix <span class="sc">%*%</span> out3<span class="sc">$</span>par[<span class="dv">2</span>]</span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a>delta_start <span class="ot">&lt;-</span> <span class="fu">log</span>(shares3) <span class="sc">-</span> <span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">sum</span>(shares3)) <span class="sc">-</span> out3<span class="sc">$</span>par[<span class="dv">1</span>]<span class="sc">*</span>p_R3</span>
+<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a></span>
+<span id="cb33-6"><a href="#cb33-6" tabindex="-1"></a>out3b <span class="ot">&lt;-</span> <span class="fu">multiroot</span>(<span class="at">f =</span> match_share, <span class="at">start =</span> delta_start,</span>
+<span id="cb33-7"><a href="#cb33-7" tabindex="-1"></a>                    <span class="at">price=</span>p_R3,<span class="at">alpha=</span>out3<span class="sc">$</span>par[<span class="dv">1</span>],<span class="at">nest_allocation=</span>a3,</span>
+<span id="cb33-8"><a href="#cb33-8" tabindex="-1"></a>                   <span class="at">mu=</span>mu_cal,</span>
+<span id="cb33-9"><a href="#cb33-9" tabindex="-1"></a>                    <span class="at">shares_obs =</span> shares3)</span>
+<span id="cb33-10"><a href="#cb33-10" tabindex="-1"></a></span>
+<span id="cb33-11"><a href="#cb33-11" tabindex="-1"></a>out3b<span class="sc">$</span>root</span>
+<span id="cb33-12"><a href="#cb33-12" tabindex="-1"></a><span class="co">#&gt; [1] 4.399545 4.399545 4.999532 4.399545 4.399545 4.999532</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a>delta_true</span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a><span class="co">#&gt; [1] 4.4 4.4 5.0 4.4 4.4 5.0</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a></span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a>delta_cal <span class="ot">&lt;-</span> out3b<span class="sc">$</span>root</span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a>alpha_cal <span class="ot">&lt;-</span> out3<span class="sc">$</span>par[<span class="dv">1</span>]</span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a></span>
+<span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a><span class="do">## See how well we are matching observables</span></span>
+<span id="cb35-8"><a href="#cb35-8" tabindex="-1"></a></span>
+<span id="cb35-9"><a href="#cb35-9" tabindex="-1"></a></span>
+<span id="cb35-10"><a href="#cb35-10" tabindex="-1"></a>out_cal <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> bertrand_foc, <span class="at">par =</span> p_R3 <span class="sc">-</span> .<span class="dv">4</span>,</span>
+<span id="cb35-11"><a href="#cb35-11" tabindex="-1"></a>                   <span class="at">own =</span> own_pre, <span class="at">alpha=</span> alpha_cal,</span>
+<span id="cb35-12"><a href="#cb35-12" tabindex="-1"></a>                   <span class="at">delta =</span> delta_cal, <span class="at">cost =</span> c_j,</span>
+<span id="cb35-13"><a href="#cb35-13" tabindex="-1"></a>                   <span class="at">nest_allocation =</span> a3, <span class="at">mu =</span>  mu_cal,</span>
+<span id="cb35-14"><a href="#cb35-14" tabindex="-1"></a>                   <span class="at">sumFOC =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb35-15"><a href="#cb35-15" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.02415492  pgrad:  0.02741716 </span></span>
+<span id="cb35-16"><a href="#cb35-16" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a></span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a>price_cal <span class="ot">&lt;-</span> out_cal<span class="sc">$</span>par</span>
+<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a>price_cal</span>
+<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a><span class="co">#&gt; [1] 3.303550 3.303550 3.756848 3.303550 3.303550 3.756848</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>p_R3</span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="co">#&gt; [1] 3.303450 3.303450 3.756766 3.303450 3.303450 3.756766</span></span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a></span>
+<span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a>share_cal <span class="ot">&lt;-</span> <span class="fu">share_calc</span>(<span class="at">price=</span>p_R3,<span class="at">delta=</span>delta_cal,<span class="at">alpha=</span>alpha_cal,</span>
+<span id="cb38-3"><a href="#cb38-3" tabindex="-1"></a>                        <span class="at">nest_allocation=</span>a3,<span class="at">mu=</span>mu_cal)</span>
+<span id="cb38-4"><a href="#cb38-4" tabindex="-1"></a>share_cal</span>
+<span id="cb38-5"><a href="#cb38-5" tabindex="-1"></a><span class="co">#&gt; [1] 0.1462529 0.1462529 0.1842381 0.1462529 0.1462529 0.1842381</span></span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a>shares3</span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.1462555 0.1462555 0.1842412 0.1462555 0.1462555 0.1842412</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a></span>
+<span id="cb40-2"><a href="#cb40-2" tabindex="-1"></a>diversions_cal <span class="ot">&lt;-</span> <span class="fu">diversion_calc</span>(<span class="at">price=</span>p_R3,<span class="at">alpha=</span>alpha_cal,<span class="at">delta=</span>delta_cal,</span>
+<span id="cb40-3"><a href="#cb40-3" tabindex="-1"></a>                                 <span class="at">nest_allocation=</span>a3,<span class="at">mu=</span>mu_cal)</span>
+<span id="cb40-4"><a href="#cb40-4" tabindex="-1"></a></span>
+<span id="cb40-5"><a href="#cb40-5" tabindex="-1"></a>diversions_cal</span>
+<span id="cb40-6"><a href="#cb40-6" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]      [,6]</span></span>
+<span id="cb40-7"><a href="#cb40-7" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.1830040 0.2338358 0.2636718 0.1239409 0.1561311</span></span>
+<span id="cb40-8"><a href="#cb40-8" tabindex="-1"></a><span class="co">#&gt; [2,] 0.1830040 0.0000000 0.2338358 0.1239409 0.2636718 0.1561311</span></span>
+<span id="cb40-9"><a href="#cb40-9" tabindex="-1"></a><span class="co">#&gt; [3,] 0.1991655 0.1991655 0.0000000 0.1293018 0.1293018 0.3019441</span></span>
+<span id="cb40-10"><a href="#cb40-10" tabindex="-1"></a><span class="co">#&gt; [4,] 0.2636718 0.1239409 0.1561311 0.0000000 0.1830040 0.2338358</span></span>
+<span id="cb40-11"><a href="#cb40-11" tabindex="-1"></a><span class="co">#&gt; [5,] 0.1239409 0.2636718 0.1561311 0.1830040 0.0000000 0.2338358</span></span>
+<span id="cb40-12"><a href="#cb40-12" tabindex="-1"></a><span class="co">#&gt; [6,] 0.1293018 0.1293018 0.3019441 0.1991655 0.1991655 0.0000000</span></span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a>true_div</span>
+<span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]      [,6]</span></span>
+<span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.1859858 0.2373172 0.2368781 0.1318340 0.1660741</span></span>
+<span id="cb41-4"><a href="#cb41-4" tabindex="-1"></a><span class="co">#&gt; [2,] 0.1859858 0.0000000 0.2373172 0.1318340 0.2368781 0.1660741</span></span>
+<span id="cb41-5"><a href="#cb41-5" tabindex="-1"></a><span class="co">#&gt; [3,] 0.1985124 0.1985124 0.0000000 0.1387758 0.1387758 0.2813058</span></span>
+<span id="cb41-6"><a href="#cb41-6" tabindex="-1"></a><span class="co">#&gt; [4,] 0.2368781 0.1318340 0.1660741 0.0000000 0.1859858 0.2373172</span></span>
+<span id="cb41-7"><a href="#cb41-7" tabindex="-1"></a><span class="co">#&gt; [5,] 0.1318340 0.2368781 0.1660741 0.1859858 0.0000000 0.2373172</span></span>
+<span id="cb41-8"><a href="#cb41-8" tabindex="-1"></a><span class="co">#&gt; [6,] 0.1387758 0.1387758 0.2813058 0.1985124 0.1985124 0.0000000</span></span></code></pre></div>
+<p>Finally, let’s see if we can recover the true demand parameters with
+missing information on costs and diversions. For this case, we will also
+use mu_constraints to restrict the number of freely varying nesting
+parameters to two.</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a></span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a><span class="co"># Create limited data objects</span></span>
+<span id="cb42-3"><a href="#cb42-3" tabindex="-1"></a>c_j_NA <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, J)</span>
+<span id="cb42-4"><a href="#cb42-4" tabindex="-1"></a>c_j_NA[<span class="dv">1</span>] <span class="ot">&lt;-</span> c_j[<span class="dv">1</span>]</span>
+<span id="cb42-5"><a href="#cb42-5" tabindex="-1"></a></span>
+<span id="cb42-6"><a href="#cb42-6" tabindex="-1"></a>true_div_NA <span class="ot">&lt;-</span> <span class="cn">NA</span> <span class="sc">*</span> true_div</span>
+<span id="cb42-7"><a href="#cb42-7" tabindex="-1"></a>true_div_NA[<span class="dv">1</span>,] <span class="ot">&lt;-</span> true_div[<span class="dv">1</span>,]</span></code></pre></div>
+<p>We can still recover the true demand parameters even if some costs
+and diversions are missing.</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" tabindex="-1"></a></span>
+<span id="cb43-2"><a href="#cb43-2" tabindex="-1"></a><span class="co"># calibration</span></span>
+<span id="cb43-3"><a href="#cb43-3" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_true,<span class="fl">0.7</span>,<span class="fl">0.7</span>)<span class="sc">-</span>.<span class="dv">2</span></span>
+<span id="cb43-4"><a href="#cb43-4" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="#cb43-5" tabindex="-1"></a>mu_constraints <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>), <span class="at">nrow =</span> <span class="dv">5</span>, <span class="at">ncol =</span> <span class="dv">2</span>)</span>
+<span id="cb43-6"><a href="#cb43-6" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" tabindex="-1"></a>out4 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
+<span id="cb43-8"><a href="#cb43-8" tabindex="-1"></a>              <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R3,</span>
+<span id="cb43-9"><a href="#cb43-9" tabindex="-1"></a>              <span class="at">shares =</span> shares3, <span class="at">cost  =</span> c_j_NA,</span>
+<span id="cb43-10"><a href="#cb43-10" tabindex="-1"></a>              <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a3, </span>
+<span id="cb43-11"><a href="#cb43-11" tabindex="-1"></a>              <span class="at">div_matrix =</span> true_div_NA,</span>
+<span id="cb43-12"><a href="#cb43-12" tabindex="-1"></a>              <span class="at">mu_constraint_matrix =</span> mu_constraints,</span>
+<span id="cb43-13"><a href="#cb43-13" tabindex="-1"></a>              <span class="at">fast_version =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb43-14"><a href="#cb43-14" tabindex="-1"></a>              <span class="at">control =</span> <span class="fu">list</span>(<span class="at">maxit =</span> <span class="dv">1000</span>) )</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" tabindex="-1"></a>out4<span class="sc">$</span>par[<span class="dv">1</span>]</span>
+<span id="cb44-2"><a href="#cb44-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.8998118</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" tabindex="-1"></a>alpha_true</span>
+<span id="cb45-2"><a href="#cb45-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a>out4<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb46-2"><a href="#cb46-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7000107 0.7000098</span></span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" tabindex="-1"></a>mu3</span>
+<span id="cb47-2"><a href="#cb47-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7 0.7 0.7 0.7 0.7</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
