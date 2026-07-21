@@ -10,7 +10,7 @@ bertrand_calibrate(
   price,
   shares,
   cost,
-  weight,
+  weight = NA,
   returnOutcomes = FALSE
 )
 }
@@ -25,7 +25,7 @@ bertrand_calibrate(
 
 \item{cost}{Marginal costs for each product}
 
-\item{weight}{Weighting matrix}
+\item{weight}{Weighting vector of length equal to number of margins provided}
 
 \item{returnOutcomes}{logical; should equilibrium objects be returned (mean
 value parameter, prices, shares, costs) as a list.}
@@ -54,11 +54,11 @@ p0 <- c_j*1.1
 
 share1 <- (exp(delta + alpha*p0))/(1+sum(exp(delta + alpha*p0)))
 x00 <- c(-1)
-wt_matrix <- diag(c(1,1,1,1000,1000,1000))
+wt_vector <- c(1,1,1)
 
 bertrand_calibrate( param = x00,
                     own = own_pre, price = p0,
                     shares = share1, cost  = c_j,
-                    weight = wt_matrix)
+                    weight = wt_vector)
 
 }

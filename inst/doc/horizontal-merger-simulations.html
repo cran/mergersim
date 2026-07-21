@@ -484,12 +484,13 @@ shares are inputs to be passed to the function.</p>
 <!--  BBoptim() does not work here. BB fails when calibrating with use
  of jacobian(). Need optim() -->
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1000</span>,<span class="dv">1000</span>,<span class="dv">1000</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>)</span>
 <span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
 <span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>out1 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate, <span class="at">par =</span> x00, </span>
 <span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>                   <span class="at">own =</span> own_pre, <span class="at">price =</span> p1, </span>
 <span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>                   <span class="at">shares =</span> share1, <span class="at">cost  =</span> c_j,</span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>                   <span class="at">weight =</span> wt_matrix)</span></code></pre></div>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>                   <span class="at">weight =</span> wt_vector,</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>              <span class="at">method =</span> <span class="st">&quot;Brent&quot;</span>,<span class="at">lower =</span> <span class="sc">-</span><span class="dv">10</span>, <span class="at">upper =</span> <span class="sc">-</span>.<span class="dv">1</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a></span>
 <span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co"># note that this optimization recovers the true demand parameters</span></span>
 <span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>out1<span class="sc">$</span>par</span>
@@ -518,14 +519,15 @@ Suppose now that we observe the costs only for firms 1 and 2:</p>
 <span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>c_obs</span>
 <span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.05 0.31   NA</span></span></code></pre></div>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1000</span>,<span class="dv">1000</span>,<span class="dv">1000</span>))</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>)</span>
 <span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a></span>
 <span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>out1b <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate, <span class="at">par =</span> x00, </span>
 <span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>                   <span class="at">own =</span> own_pre, <span class="at">price =</span> p1, </span>
 <span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>                   <span class="at">shares =</span> share1, <span class="at">cost  =</span> c_obs,</span>
-<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>                   <span class="at">weight =</span> wt_matrix)</span></code></pre></div>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>                   <span class="at">weight =</span> wt_vector,</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a>               <span class="at">method =</span> <span class="st">&quot;Brent&quot;</span>,<span class="at">lower =</span> <span class="sc">-</span><span class="dv">10</span>, <span class="at">upper =</span> <span class="sc">-</span>.<span class="dv">1</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a></span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="co"># note that this optimization recovers the true demand parameters</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="co"># this optimization recovers the true demand parameters</span></span>
 <span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>out1b<span class="sc">$</span>par</span>
 <span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>alpha_true</span>
@@ -609,12 +611,12 @@ cost information available.</p>
 <span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.05 0.31   NA</span></span></code></pre></div>
 <p>Now we calibrate <span class="math inline">\(\alpha\)</span> with the
 available pricing conditions:</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>))</span>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>)</span>
 <span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a></span>
 <span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a>result4 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> ssa_calibrate, <span class="at">par =</span> <span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">2</span>),</span>
 <span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a>                    <span class="at">lower =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>), <span class="at">upper =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.0001</span>),</span>
 <span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a>                    <span class="at">own=</span>own_pre, <span class="at">price =</span> p2, <span class="at">share =</span> share2,</span>
-<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a>                    <span class="at">cost =</span> c_obs, <span class="at">weight =</span> wt_matrix)</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a>                    <span class="at">cost =</span> c_obs, <span class="at">weight =</span> wt_vector)</span>
 <span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  42.71919  pgrad:  549.2472 </span></span>
 <span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a><span class="co">#&gt; iter:  10  f-value:  0.0003334565  pgrad:  0.07430411 </span></span>
 <span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
@@ -654,8 +656,8 @@ one product.</p>
 <span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
 </div>
 </div>
-<div id="traditional-bargaining-model-nests-bertrand" class="section level1">
-<h1>Traditional Bargaining Model (nests Bertrand)</h1>
+<div id="traditional-bargaining-model" class="section level1">
+<h1>Traditional Bargaining Model</h1>
 <p>For now, we skip the mathematical framework for the bargaining
 models, but the equations are given in many papers including Panhans and
 Taragin (2023). Instead, in this document we focus on defining functions
@@ -685,13 +687,13 @@ from these prices, shares, and costs.</p>
 <span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>alpha_start <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">1.2</span></span>
 <span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>delta_start <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>,J)</span>
 <span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_start,delta_start)</span>
-<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(J<span class="sc">*</span><span class="dv">2</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="at">times =</span> J<span class="sc">*</span><span class="dv">2</span>)</span>
 <span id="cb33-6"><a href="#cb33-6" tabindex="-1"></a></span>
 <span id="cb33-7"><a href="#cb33-7" tabindex="-1"></a></span>
 <span id="cb33-8"><a href="#cb33-8" tabindex="-1"></a><span class="fu">bargain_calibrate</span>(<span class="at">param =</span> x00, </span>
 <span id="cb33-9"><a href="#cb33-9" tabindex="-1"></a>                       <span class="at">own =</span> own_pre, <span class="at">price =</span> p3, </span>
 <span id="cb33-10"><a href="#cb33-10" tabindex="-1"></a>                       <span class="at">shares =</span> share3, <span class="at">cost  =</span> c_j,</span>
-<span id="cb33-11"><a href="#cb33-11" tabindex="-1"></a>                       <span class="at">weight =</span> wt_matrix, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
+<span id="cb33-11"><a href="#cb33-11" tabindex="-1"></a>                       <span class="at">weight =</span> wt_vector, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
 <span id="cb33-12"><a href="#cb33-12" tabindex="-1"></a><span class="co">#&gt;            [,1]</span></span>
 <span id="cb33-13"><a href="#cb33-13" tabindex="-1"></a><span class="co">#&gt; [1,] 0.08717853</span></span></code></pre></div>
 <div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a></span>
@@ -699,7 +701,7 @@ from these prices, shares, and costs.</p>
 <span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>out3 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> bargain_calibrate, <span class="at">par =</span> x00, </span>
 <span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">price =</span> p3, </span>
 <span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a>                <span class="at">shares =</span> share3, <span class="at">cost  =</span> c_j,</span>
-<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a>                <span class="at">weight =</span> wt_matrix, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
+<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a>                <span class="at">weight =</span> wt_vector, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
 <span id="cb34-7"><a href="#cb34-7" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.08717853  pgrad:  0.4463191 </span></span>
 <span id="cb34-8"><a href="#cb34-8" tabindex="-1"></a><span class="co">#&gt; iter:  10  f-value:  0.0001924759  pgrad:  0.00761619 </span></span>
 <span id="cb34-9"><a href="#cb34-9" tabindex="-1"></a><span class="co">#&gt; iter:  20  f-value:  7.093329e-05  pgrad:  0.0005777945 </span></span>
@@ -721,8 +723,8 @@ from these prices, shares, and costs.</p>
 <span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.8116445 0.9317579 0.8218446</span></span></code></pre></div>
 </div>
 </div>
-<div id="alternative-bargaining-model-nests-ssa" class="section level1">
-<h1>Alternative Bargaining Model (nests SSA)</h1>
+<div id="alternative-bargaining-model" class="section level1">
+<h1>Alternative Bargaining Model</h1>
 <p>Next, we consider an alternative bargaining setup that nests the
 second score auction.</p>
 <p>Let’s assume the demand parameters specified above are the true
@@ -744,12 +746,12 @@ parameters from these prices, shares, and costs.</p>
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a>alpha_start <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">1.2</span></span>
 <span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a>delta_start <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>,J)</span>
 <span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_start,delta_start)</span>
-<span id="cb41-4"><a href="#cb41-4" tabindex="-1"></a>wt_matrix <span class="ot">&lt;-</span> <span class="fu">diag</span>(J<span class="sc">*</span><span class="dv">2</span>)</span>
+<span id="cb41-4"><a href="#cb41-4" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="at">times =</span> J<span class="sc">*</span><span class="dv">2</span>)</span>
 <span id="cb41-5"><a href="#cb41-5" tabindex="-1"></a></span>
 <span id="cb41-6"><a href="#cb41-6" tabindex="-1"></a>out4 <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> ssbargain_calibrate, <span class="at">par =</span> x00, </span>
 <span id="cb41-7"><a href="#cb41-7" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">price =</span> p4, </span>
 <span id="cb41-8"><a href="#cb41-8" tabindex="-1"></a>                <span class="at">shares =</span> share4, <span class="at">cost  =</span> c_j,</span>
-<span id="cb41-9"><a href="#cb41-9" tabindex="-1"></a>                <span class="at">weight =</span> wt_matrix, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
+<span id="cb41-9"><a href="#cb41-9" tabindex="-1"></a>                <span class="at">weight =</span> wt_vector, <span class="at">lambda =</span> <span class="fl">0.5</span>)</span>
 <span id="cb41-10"><a href="#cb41-10" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.0806167  pgrad:  0.4043435 </span></span>
 <span id="cb41-11"><a href="#cb41-11" tabindex="-1"></a><span class="co">#&gt; iter:  10  f-value:  9.529025e-05  pgrad:  0.001538167 </span></span>
 <span id="cb41-12"><a href="#cb41-12" tabindex="-1"></a><span class="co">#&gt; iter:  20  f-value:  1.905773e-05  pgrad:  0.0003214364 </span></span>

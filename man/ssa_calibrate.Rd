@@ -4,7 +4,7 @@
 \alias{ssa_calibrate}
 \title{Second score auction calibration}
 \usage{
-ssa_calibrate(param, own, price, share, cost, weight)
+ssa_calibrate(param, own, price, share, cost, weight = NA)
 }
 \arguments{
 \item{param}{The price coefficient alpha to be calibrated}
@@ -17,7 +17,7 @@ ssa_calibrate(param, own, price, share, cost, weight)
 
 \item{cost}{Marginal costs for each product}
 
-\item{weight}{Weighting matrix}
+\item{weight}{Weighting vector of length equal to number of observed costs}
 }
 \value{
 The first-order conditions
@@ -34,9 +34,9 @@ own_pre = diag(3)
 p0 <- c(.05, .34, .33)
 share1 <- c( 0.31, 0.27, 0.25)
 c_j <- c(.05,.31,.30)
-wt_matrix <- diag(c(1,1,1))
+wt_vector <- c(1,1,1)
 
 ssa_calibrate(param = -1,own = own_pre,price=p0,share=share1,cost=c_j,
-              weight = wt_matrix)
+              weight = wt_vector)
 
 }

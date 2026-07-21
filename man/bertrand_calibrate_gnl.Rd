@@ -10,17 +10,12 @@ bertrand_calibrate_gnl(
   price,
   shares,
   cost,
-  weight = c(1, 1, 1, 1),
+  weight = NA,
   nest_allocation,
-  div_matrix,
+  div_matrix = NA,
   mu_constraint_matrix = NA,
   div_calc_marginal = TRUE,
-  optimizer = "BBoptim",
-  optimizer_c = "optim",
-  returnOutcomes = FALSE,
-  maxitval = 1500,
-  maxitval_c = 1500,
-  fast_version = FALSE
+  returnOutcomes = FALSE
 )
 }
 \arguments{
@@ -34,8 +29,9 @@ bertrand_calibrate_gnl(
 
 \item{cost}{Marginal costs for each product}
 
-\item{weight}{Vector of length four with weights given to prices, shares,
-diversions, and costs, respectively. Default is c(1,1,1,1).}
+\item{weight}{Weighting vector of length equal to number of margins provided;
+if diversions are provided, these weights are relative to weight on matching
+diversions.}
 
 \item{nest_allocation}{For generalized nested logit demand, a J-by-K matrix
 where each element (j,k) designates the membership of good j in nest k. Rows
@@ -56,23 +52,8 @@ It must be the case that K is greater than K'.}
 diversions (if TRUE) or second choice diversions (if FALSE). Default
 to TRUE.}
 
-\item{optimizer}{Which optimization routine should be used to find
-equilibrium prices, either BBoptim or multiroot}
-
-\item{optimizer_c}{Which optimization routine should be used to calibrate
-costs, either BBoptim or optim}
-
 \item{returnOutcomes}{logical; should equilibrium objects be returned (mean
 value parameter, prices, shares, costs) as a list.}
-
-\item{maxitval}{Max iterations during price optimization from foc}
-
-\item{maxitval_c}{Max iterations during cost optimization from foc}
-
-\item{fast_version}{logical; if True, uses only first-order conditions for
-products that have non-missing costs. If False, uses the model to predict costs
-for all products, and then uses all first-order conditions, which takes longer
-to calibrate. Default is False.}
 }
 \value{
 Difference between model predicted and observed values of
@@ -94,7 +75,7 @@ bertrand_calibrate_gnl(param = c(-0.9, 1, 1),
                        price = c(.05, .34, .33),
                        shares = c( 0.31, 0.27, 0.25),
                        cost = c(.05,.31,.30),
-                       weight = c(1,1,1,1),
+                       weight = c(1,1,1),
                        nest_allocation = nest1, div_matrix = divmat)
 
 }

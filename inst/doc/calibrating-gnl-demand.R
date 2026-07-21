@@ -65,14 +65,13 @@ true_div <- diversion_calc(p=p_R1,alpha=alpha_true,delta=delta_true,
 ## ----results = "hide", warning=FALSE------------------------------------------
 
 
-wt_vector <- c(1,1,1,1)
+wt_vector <- c(1,1,1,1,1)
 
 bertrand_calibrate_gnl(param = c(alpha_true,mu2),
                             own = own_pre, price = p_R1+.1,
                             shares = shares1, cost  = c_j,
                             weight = wt_vector, nest_allocation=a1,
-                            div_matrix = true_div,
-                       fast_version = TRUE)
+                            div_matrix = true_div)
 
 
 x00 <- c(alpha_true,mu2)-.1
@@ -81,8 +80,7 @@ out2 <- optim(f = bertrand_calibrate_gnl, par = x00,
                own = own_pre, price = p_R1,
                shares = shares1, cost  = c_j,
                weight = wt_vector, nest_allocation=a1, 
-               div_matrix = true_div,
-              fast_version = TRUE)
+               div_matrix = true_div)
 
 ## -----------------------------------------------------------------------------
 out2$par[1]
@@ -111,7 +109,7 @@ mu_cal <- out2$par[2:3]
 
 ## -----------------------------------------------------------------------------
 
-# How well are we matching prices and shares here?
+# Evaluate matching to observables
 
 out_cal <- BBoptim(f = bertrand_foc, par = p_R1,
                 own = own_pre, alpha= alpha_cal,
@@ -182,8 +180,7 @@ true_div <- diversion_calc(price=p_R3,alpha=alpha_true,delta=delta_true,
 
 ## ----results = "hide", warning=FALSE------------------------------------------
 
-#wt_vector <- c(50,10,100,200)
-wt_vector <- c(50,10,100)
+wt_vector <- c(1,1,1,1,1,1)
 
 x00 <- c(alpha_true,mu3[1])-.2
 
@@ -193,7 +190,6 @@ out3 <- optim(f = bertrand_calibrate_gnl, par = x00,
               shares = shares3, cost  = c_j,
               weight = wt_vector, nest_allocation=a3, div_matrix = true_div,
               div_calc_marginal = TRUE,
-              fast_version = TRUE,
               control = list(maxit = 1000))
 
 
@@ -225,7 +221,7 @@ alpha_cal <- out3$par[1]
 
 
 
-## See how well we are matching observables
+## evaluate matching to observables
 
 
 out_cal <- BBoptim(f = bertrand_foc, par = p_R3 - .4,
@@ -266,6 +262,7 @@ true_div_NA[1,] <- true_div[1,]
 x00 <- c(alpha_true,0.7,0.7)-.2
 
 mu_constraints <- matrix(c(1,1,0,0,0,0,0,1,1,1), nrow = 5, ncol = 2)
+wt_vector <- c(1)
 
 out4 <- optim(f = bertrand_calibrate_gnl, par = x00,
               own = own_pre, price = p_R3,
@@ -273,7 +270,6 @@ out4 <- optim(f = bertrand_calibrate_gnl, par = x00,
               weight = wt_vector, nest_allocation=a3, 
               div_matrix = true_div_NA,
               mu_constraint_matrix = mu_constraints,
-              fast_version = TRUE,
               control = list(maxit = 1000) )
 
 

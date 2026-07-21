@@ -10,7 +10,7 @@ ssbargain_calibrate(
   price,
   shares,
   cost,
-  weight,
+  weight = NA,
   lambda,
   includeMUI = TRUE
 )
@@ -27,7 +27,7 @@ calibrate}
 
 \item{cost}{Marginal costs for each product}
 
-\item{weight}{Weighting matrix}
+\item{weight}{Weighting vector of length 2*J}
 
 \item{lambda}{Bargaining power of the buyer}
 
@@ -52,11 +52,11 @@ delta <- c(.81,.93,.82)
 own_pre = diag(3)
 p0 <- c(.05, .34, .33)
 c_j <- c(.05,.31,.30)
-wt_matrix <- diag(c(1,1,1,1000,1000,1000))
+wt_vector <- c(1,1,1,1000,1000,1000)
 share1 <- c( 0.31, 0.27, 0.25)
 
 ssbargain_calibrate(param = c(alpha,delta),own = own_pre,price = p0,
-                    shares = share1, cost = c_j, weight = wt_matrix,
+                    shares = share1, cost = c_j, weight = wt_vector,
                     lambda = 0.5)
 
 }

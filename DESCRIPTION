@@ -1,6 +1,6 @@
 Package: mergersim
 Title: Merger Simulation and Calibration
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
     person("Matthew T", "Panhans",
   email = "mpanhans@gmail.com",
@@ -19,9 +19,9 @@ Imports: BB, numDeriv, rootSolve, stats
 Suggests: antitrust, knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2026-06-26 14:38:42 UTC; mattpanhans
+Packaged: 2026-07-21 13:43:41 UTC; mattpanhans
 Author: Matthew T Panhans [aut, cre] (ORCID:
     <https://orcid.org/0000-0001-7874-6740>)
 Maintainer: Matthew T Panhans <mpanhans@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-07-02 18:20:02 UTC
+Date/Publication: 2026-07-21 14:10:02 UTC

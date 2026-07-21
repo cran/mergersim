@@ -55,12 +55,13 @@ share1_post
 
 ## ----results = "hide", warning=FALSE------------------------------------------
 x00 <- c(-1)
-wt_matrix <- diag(c(1,1,1,1000,1000,1000))
+wt_vector <- c(1,1,1)
 
 out1 <- optim(f = bertrand_calibrate, par = x00, 
                    own = own_pre, price = p1, 
                    shares = share1, cost  = c_j,
-                   weight = wt_matrix)
+                   weight = wt_vector,
+              method = "Brent",lower = -10, upper = -.1)
 
 
 
@@ -82,19 +83,19 @@ c_obs
 
 ## ----results = "hide", warning=FALSE------------------------------------------
 x00 <- c(-1)
-wt_matrix <- diag(c(1,1,1,1000,1000,1000))
+wt_vector <- c(1,1)
 
 out1b <- optim(f = bertrand_calibrate, par = x00, 
                    own = own_pre, price = p1, 
                    shares = share1, cost  = c_obs,
-                   weight = wt_matrix)
-
+                   weight = wt_vector,
+               method = "Brent",lower = -10, upper = -.1)
 
 
 
 ## -----------------------------------------------------------------------------
 
-# note that this optimization recovers the true demand parameters
+# this optimization recovers the true demand parameters
 out1b$par
 alpha_true
 
@@ -116,12 +117,12 @@ c_obs[3] <- NA
 c_obs
 
 ## -----------------------------------------------------------------------------
-wt_matrix <- diag(c(1,1))
+wt_vector <- c(1,1)
 
 result4 <- BBoptim(f = ssa_calibrate, par = c(-.2),
                     lower = c(-Inf), upper = c(-0.0001),
                     own=own_pre, price = p2, share = share2,
-                    cost = c_obs, weight = wt_matrix)
+                    cost = c_obs, weight = wt_vector)
 
 alpha4 <- result4$par
 alpha4       # recover true value
@@ -160,19 +161,19 @@ J <- length(c_j)
 alpha_start <- -1.2
 delta_start <- rep(1,J)
 x00 <- c(alpha_start,delta_start)
-wt_matrix <- diag(J*2)
+wt_vector <- rep(1, times = J*2)
 
 
 bargain_calibrate(param = x00, 
                        own = own_pre, price = p3, 
                        shares = share3, cost  = c_j,
-                       weight = wt_matrix, lambda = 0.5)
+                       weight = wt_vector, lambda = 0.5)
 
 
 out3 <- BBoptim(f = bargain_calibrate, par = x00, 
                 own = own_pre, price = p3, 
                 shares = share3, cost  = c_j,
-                weight = wt_matrix, lambda = 0.5)
+                weight = wt_vector, lambda = 0.5)
 
 # check if we recovered correct demand parameters
 # finding good initial values is important.
@@ -200,12 +201,12 @@ print(share4)
 alpha_start <- -1.2
 delta_start <- rep(1,J)
 x00 <- c(alpha_start,delta_start)
-wt_matrix <- diag(J*2)
+wt_vector <- rep(1, times = J*2)
 
 out4 <- BBoptim(f = ssbargain_calibrate, par = x00, 
                 own = own_pre, price = p4, 
                 shares = share4, cost  = c_j,
-                weight = wt_matrix, lambda = 0.5)
+                weight = wt_vector, lambda = 0.5)
 
 # check if we recovered correct demand parameters
 # finding good initial values is important.

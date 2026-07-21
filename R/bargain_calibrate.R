@@ -11,7 +11,7 @@
 #' in buyer's payoff, thereby translating dollars to utility. Default is True,
 #' interpreted as buyer maximizing utility. Setting equal to False would have
 #' interpretation that buyer maximizes profts.
-#' @param weight Weighting matrix
+#' @param weight Weighting vector of length 2*J
 #'
 #' @returns The first-order conditions
 #'
@@ -25,10 +25,10 @@
 #' own_pre = diag(3)
 #' p0 <- c_j*1.1
 #' share1 <- (exp(delta + alpha*p0))/(1+sum(exp(delta + alpha*p0)))
-#' wt_matrix <- diag(c(1,1,1,1000,1000,1000))
+#' wt_vector <- c(1,1,1,1000,1000,1000)
 #'
 #' bargain_calibrate(param = c(alpha,delta),own = own_pre,price = p0,
-#' shares = share1,cost = c_j, weight = wt_matrix,
+#' shares = share1,cost = c_j, weight = wt_vector,
 #' lambda = 0.5)
 #'
 #' @export
@@ -39,10 +39,15 @@
 # Nash bargaining calibration
 ##################################################################
 
-bargain_calibrate <- function(param,own,price,shares,cost,weight,
+bargain_calibrate <- function(param,own,price,shares,cost,weight = NA,
                                lambda,includeMUI=TRUE){
 
   J <- length(price)
+
+  if (anyNA(weight)) {
+    weight <- c(rep(1, times = J), rep(1000, times = J))
+  }
+
   alpha <- param[1]
   delta <- param[2:(1+J)]
 
@@ -56,7 +61,7 @@ bargain_calibrate <- function(param,own,price,shares,cost,weight,
   pdiff <- price - price_m
   sdiff <- shares - share_m
 
-  objfxn <- c(pdiff,sdiff) %*% weight %*% c(pdiff,sdiff)
+  objfxn <- c(pdiff,sdiff) %*% diag(weight) %*% c(pdiff,sdiff)
   return(objfxn)
 }
 

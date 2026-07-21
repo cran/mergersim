@@ -443,30 +443,28 @@ overlapping nests.</p>
 information about substitution patterns and costs are known.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a></span>
 <span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>)</span>
 <span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
 <span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="fu">bertrand_calibrate_gnl</span>(<span class="at">param =</span> <span class="fu">c</span>(alpha_true,mu2),</span>
 <span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>                            <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R1<span class="fl">+.1</span>,</span>
 <span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>                            <span class="at">shares =</span> shares1, <span class="at">cost  =</span> c_j,</span>
 <span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>                            <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a1,</span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>                            <span class="at">div_matrix =</span> true_div,</span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>                       <span class="at">fast_version =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>                            <span class="at">div_matrix =</span> true_div)</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a></span>
 <span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a></span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_true,mu2)<span class="sc">-</span>.<span class="dv">1</span></span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a></span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>out2 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>               <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R1,</span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>               <span class="at">shares =</span> shares1, <span class="at">cost  =</span> c_j,</span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>               <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a1, </span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>               <span class="at">div_matrix =</span> true_div,</span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>              <span class="at">fast_version =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_true,mu2)<span class="sc">-</span>.<span class="dv">1</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>out2 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>               <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R1,</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>               <span class="at">shares =</span> shares1, <span class="at">cost  =</span> c_j,</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>               <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a1, </span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>               <span class="at">div_matrix =</span> true_div)</span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>out2<span class="sc">$</span>par[<span class="dv">1</span>]</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9000401</span></span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>alpha_true</span>
 <span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>out2<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7 0.7</span></span></code></pre></div>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7000045 0.6999877</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>mu2</span>
 <span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7 0.7</span></span></code></pre></div>
 <p>The calibrated values of the mean value parameter can be recovered in
@@ -480,7 +478,7 @@ an extra step.</p>
 <span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>                   <span class="at">shares_obs =</span> shares1)</span>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a></span>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>out2_d<span class="sc">$</span>root</span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; [1] 4.399713 4.399713 4.999711 6.499710 6.499710</span></span></code></pre></div>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; [1] 4.399838 4.399838 4.999856 6.499914 6.499914</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>delta_true</span>
 <span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="co">#&gt; [1] 4.4 4.4 5.0 6.5 6.5</span></span></code></pre></div>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a></span>
@@ -491,14 +489,14 @@ an extra step.</p>
 the model predicted values match the observed values for prices, shares,
 and diversions.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a></span>
-<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="co"># How well are we matching prices and shares here?</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="co"># Evaluate matching to observables</span></span>
 <span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a></span>
 <span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>out_cal <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> bertrand_foc, <span class="at">par =</span> p_R1,</span>
 <span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>                <span class="at">own =</span> own_pre, <span class="at">alpha=</span> alpha_cal,</span>
 <span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>                <span class="at">delta =</span> delta_cal, <span class="at">cost =</span> c_j,</span>
 <span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>                <span class="at">nest_allocation =</span> a1, <span class="at">mu =</span>  mu_cal,</span>
 <span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>                <span class="at">sumFOC =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  3.76421e-10  pgrad:  4.08898e-06</span></span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  6.911547e-10  pgrad:  8.46889e-06</span></span>
 <span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="co">#&gt; Warning in spg(par = par, fn = fn, gr = gr, method = cpars[1], project =</span></span>
 <span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a><span class="co">#&gt; project, : convergence tolerance satisified at intial parameter values.</span></span>
 <span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
@@ -522,11 +520,11 @@ and diversions.</p>
 <span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a></span>
 <span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>diversions_cal</span>
 <span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.2279396 0.2953292 0.2217681 0.2217681</span></span>
-<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="co">#&gt; [2,] 0.2279396 0.0000000 0.2953292 0.2217681 0.2217681</span></span>
-<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="co">#&gt; [3,] 0.2491137 0.2491137 0.0000000 0.2334170 0.2334170</span></span>
-<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="co">#&gt; [4,] 0.1219154 0.1219154 0.1579592 0.0000000 0.5584197</span></span>
-<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="co">#&gt; [5,] 0.1219154 0.1219154 0.1579592 0.5584197 0.0000000</span></span></code></pre></div>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.2279383 0.2953275 0.2217694 0.2217694</span></span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="co">#&gt; [2,] 0.2279383 0.0000000 0.2953275 0.2217694 0.2217694</span></span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="co">#&gt; [3,] 0.2491121 0.2491121 0.0000000 0.2334184 0.2334184</span></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="co">#&gt; [4,] 0.1219132 0.1219132 0.1579565 0.0000000 0.5584273</span></span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="co">#&gt; [5,] 0.1219132 0.1219132 0.1579565 0.5584273 0.0000000</span></span></code></pre></div>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>true_div</span>
 <span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
 <span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.2179539 0.2823919 0.2324362 0.2324362</span></span>
@@ -601,26 +599,24 @@ optimization function with a starting value vector with two elements,
 the calibration routine will assume that the analyst intends to assume
 all nesting parameters have the same value.</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a></span>
-<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a><span class="co">#wt_vector &lt;- c(50,10,100,200)</span></span>
-<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">50</span>,<span class="dv">10</span>,<span class="dv">100</span>)</span>
-<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a></span>
-<span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_true,mu3[<span class="dv">1</span>])<span class="sc">-</span>.<span class="dv">2</span></span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_true,mu3[<span class="dv">1</span>])<span class="sc">-</span>.<span class="dv">2</span></span>
+<span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a></span>
 <span id="cb28-6"><a href="#cb28-6" tabindex="-1"></a></span>
-<span id="cb28-7"><a href="#cb28-7" tabindex="-1"></a></span>
-<span id="cb28-8"><a href="#cb28-8" tabindex="-1"></a>out3 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
-<span id="cb28-9"><a href="#cb28-9" tabindex="-1"></a>              <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R3,</span>
-<span id="cb28-10"><a href="#cb28-10" tabindex="-1"></a>              <span class="at">shares =</span> shares3, <span class="at">cost  =</span> c_j,</span>
-<span id="cb28-11"><a href="#cb28-11" tabindex="-1"></a>              <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a3, <span class="at">div_matrix =</span> true_div,</span>
-<span id="cb28-12"><a href="#cb28-12" tabindex="-1"></a>              <span class="at">div_calc_marginal =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb28-13"><a href="#cb28-13" tabindex="-1"></a>              <span class="at">fast_version =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb28-14"><a href="#cb28-14" tabindex="-1"></a>              <span class="at">control =</span> <span class="fu">list</span>(<span class="at">maxit =</span> <span class="dv">1000</span>))</span></code></pre></div>
+<span id="cb28-7"><a href="#cb28-7" tabindex="-1"></a>out3 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
+<span id="cb28-8"><a href="#cb28-8" tabindex="-1"></a>              <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R3,</span>
+<span id="cb28-9"><a href="#cb28-9" tabindex="-1"></a>              <span class="at">shares =</span> shares3, <span class="at">cost  =</span> c_j,</span>
+<span id="cb28-10"><a href="#cb28-10" tabindex="-1"></a>              <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a3, <span class="at">div_matrix =</span> true_div,</span>
+<span id="cb28-11"><a href="#cb28-11" tabindex="-1"></a>              <span class="at">div_calc_marginal =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb28-12"><a href="#cb28-12" tabindex="-1"></a>              <span class="at">control =</span> <span class="fu">list</span>(<span class="at">maxit =</span> <span class="dv">1000</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a></span>
 <span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>out3<span class="sc">$</span>par[<span class="dv">1</span>]</span>
-<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="co">#&gt; [1] -0.8999731</span></span></code></pre></div>
+<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="co">#&gt; [1] -0.899861</span></span></code></pre></div>
 <div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a>alpha_true</span>
 <span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a>out3<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(out3<span class="sc">$</span>par)]</span>
-<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.6999925</span></span></code></pre></div>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.6999786</span></span></code></pre></div>
 <div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a>mu3</span>
 <span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7 0.7 0.7 0.7 0.7</span></span></code></pre></div>
 <p>And then we can check how closely the model predicted values match
@@ -636,7 +632,7 @@ the observed market outcomes.</p>
 <span id="cb33-9"><a href="#cb33-9" tabindex="-1"></a>                    <span class="at">shares_obs =</span> shares3)</span>
 <span id="cb33-10"><a href="#cb33-10" tabindex="-1"></a></span>
 <span id="cb33-11"><a href="#cb33-11" tabindex="-1"></a>out3b<span class="sc">$</span>root</span>
-<span id="cb33-12"><a href="#cb33-12" tabindex="-1"></a><span class="co">#&gt; [1] 4.399545 4.399545 4.999532 4.399545 4.399545 4.999532</span></span></code></pre></div>
+<span id="cb33-12"><a href="#cb33-12" tabindex="-1"></a><span class="co">#&gt; [1] 4.399187 4.399187 4.999122 4.399187 4.399187 4.999122</span></span></code></pre></div>
 <div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a>delta_true</span>
 <span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a><span class="co">#&gt; [1] 4.4 4.4 5.0 4.4 4.4 5.0</span></span></code></pre></div>
 <div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a></span>
@@ -645,7 +641,7 @@ the observed market outcomes.</p>
 <span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a></span>
 <span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a></span>
 <span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a></span>
-<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a><span class="do">## See how well we are matching observables</span></span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a><span class="do">## evaluate matching to observables</span></span>
 <span id="cb35-8"><a href="#cb35-8" tabindex="-1"></a></span>
 <span id="cb35-9"><a href="#cb35-9" tabindex="-1"></a></span>
 <span id="cb35-10"><a href="#cb35-10" tabindex="-1"></a>out_cal <span class="ot">&lt;-</span> <span class="fu">BBoptim</span>(<span class="at">f =</span> bertrand_foc, <span class="at">par =</span> p_R3 <span class="sc">-</span> .<span class="dv">4</span>,</span>
@@ -653,12 +649,12 @@ the observed market outcomes.</p>
 <span id="cb35-12"><a href="#cb35-12" tabindex="-1"></a>                   <span class="at">delta =</span> delta_cal, <span class="at">cost =</span> c_j,</span>
 <span id="cb35-13"><a href="#cb35-13" tabindex="-1"></a>                   <span class="at">nest_allocation =</span> a3, <span class="at">mu =</span>  mu_cal,</span>
 <span id="cb35-14"><a href="#cb35-14" tabindex="-1"></a>                   <span class="at">sumFOC =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb35-15"><a href="#cb35-15" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.02415492  pgrad:  0.02741716 </span></span>
+<span id="cb35-15"><a href="#cb35-15" tabindex="-1"></a><span class="co">#&gt; iter:  0  f-value:  0.02416307  pgrad:  0.02741805 </span></span>
 <span id="cb35-16"><a href="#cb35-16" tabindex="-1"></a><span class="co">#&gt;   Successful convergence.</span></span></code></pre></div>
 <div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a></span>
 <span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a>price_cal <span class="ot">&lt;-</span> out_cal<span class="sc">$</span>par</span>
 <span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a>price_cal</span>
-<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a><span class="co">#&gt; [1] 3.303550 3.303550 3.756848 3.303550 3.303550 3.756848</span></span></code></pre></div>
+<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a><span class="co">#&gt; [1] 3.303663 3.303663 3.756964 3.303663 3.303663 3.756964</span></span></code></pre></div>
 <div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>p_R3</span>
 <span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="co">#&gt; [1] 3.303450 3.303450 3.756766 3.303450 3.303450 3.756766</span></span></code></pre></div>
 <div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a></span>
@@ -674,12 +670,12 @@ the observed market outcomes.</p>
 <span id="cb40-4"><a href="#cb40-4" tabindex="-1"></a></span>
 <span id="cb40-5"><a href="#cb40-5" tabindex="-1"></a>diversions_cal</span>
 <span id="cb40-6"><a href="#cb40-6" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]      [,6]</span></span>
-<span id="cb40-7"><a href="#cb40-7" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.1830040 0.2338358 0.2636718 0.1239409 0.1561311</span></span>
-<span id="cb40-8"><a href="#cb40-8" tabindex="-1"></a><span class="co">#&gt; [2,] 0.1830040 0.0000000 0.2338358 0.1239409 0.2636718 0.1561311</span></span>
-<span id="cb40-9"><a href="#cb40-9" tabindex="-1"></a><span class="co">#&gt; [3,] 0.1991655 0.1991655 0.0000000 0.1293018 0.1293018 0.3019441</span></span>
-<span id="cb40-10"><a href="#cb40-10" tabindex="-1"></a><span class="co">#&gt; [4,] 0.2636718 0.1239409 0.1561311 0.0000000 0.1830040 0.2338358</span></span>
-<span id="cb40-11"><a href="#cb40-11" tabindex="-1"></a><span class="co">#&gt; [5,] 0.1239409 0.2636718 0.1561311 0.1830040 0.0000000 0.2338358</span></span>
-<span id="cb40-12"><a href="#cb40-12" tabindex="-1"></a><span class="co">#&gt; [6,] 0.1293018 0.1293018 0.3019441 0.1991655 0.1991655 0.0000000</span></span></code></pre></div>
+<span id="cb40-7"><a href="#cb40-7" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.1830042 0.2338364 0.2636769 0.1239386 0.1561282</span></span>
+<span id="cb40-8"><a href="#cb40-8" tabindex="-1"></a><span class="co">#&gt; [2,] 0.1830042 0.0000000 0.2338364 0.1239386 0.2636769 0.1561282</span></span>
+<span id="cb40-9"><a href="#cb40-9" tabindex="-1"></a><span class="co">#&gt; [3,] 0.1991663 0.1991663 0.0000000 0.1292994 0.1292994 0.3019481</span></span>
+<span id="cb40-10"><a href="#cb40-10" tabindex="-1"></a><span class="co">#&gt; [4,] 0.2636769 0.1239386 0.1561282 0.0000000 0.1830042 0.2338364</span></span>
+<span id="cb40-11"><a href="#cb40-11" tabindex="-1"></a><span class="co">#&gt; [5,] 0.1239386 0.2636769 0.1561282 0.1830042 0.0000000 0.2338364</span></span>
+<span id="cb40-12"><a href="#cb40-12" tabindex="-1"></a><span class="co">#&gt; [6,] 0.1292994 0.1292994 0.3019481 0.1991663 0.1991663 0.0000000</span></span></code></pre></div>
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a>true_div</span>
 <span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]      [,6]</span></span>
 <span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a><span class="co">#&gt; [1,] 0.0000000 0.1859858 0.2373172 0.2368781 0.1318340 0.1660741</span></span>
@@ -706,21 +702,21 @@ and diversions are missing.</p>
 <span id="cb43-3"><a href="#cb43-3" tabindex="-1"></a>x00 <span class="ot">&lt;-</span> <span class="fu">c</span>(alpha_true,<span class="fl">0.7</span>,<span class="fl">0.7</span>)<span class="sc">-</span>.<span class="dv">2</span></span>
 <span id="cb43-4"><a href="#cb43-4" tabindex="-1"></a></span>
 <span id="cb43-5"><a href="#cb43-5" tabindex="-1"></a>mu_constraints <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>), <span class="at">nrow =</span> <span class="dv">5</span>, <span class="at">ncol =</span> <span class="dv">2</span>)</span>
-<span id="cb43-6"><a href="#cb43-6" tabindex="-1"></a></span>
-<span id="cb43-7"><a href="#cb43-7" tabindex="-1"></a>out4 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
-<span id="cb43-8"><a href="#cb43-8" tabindex="-1"></a>              <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R3,</span>
-<span id="cb43-9"><a href="#cb43-9" tabindex="-1"></a>              <span class="at">shares =</span> shares3, <span class="at">cost  =</span> c_j_NA,</span>
-<span id="cb43-10"><a href="#cb43-10" tabindex="-1"></a>              <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a3, </span>
-<span id="cb43-11"><a href="#cb43-11" tabindex="-1"></a>              <span class="at">div_matrix =</span> true_div_NA,</span>
-<span id="cb43-12"><a href="#cb43-12" tabindex="-1"></a>              <span class="at">mu_constraint_matrix =</span> mu_constraints,</span>
-<span id="cb43-13"><a href="#cb43-13" tabindex="-1"></a>              <span class="at">fast_version =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb43-6"><a href="#cb43-6" tabindex="-1"></a>wt_vector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>)</span>
+<span id="cb43-7"><a href="#cb43-7" tabindex="-1"></a></span>
+<span id="cb43-8"><a href="#cb43-8" tabindex="-1"></a>out4 <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">f =</span> bertrand_calibrate_gnl, <span class="at">par =</span> x00,</span>
+<span id="cb43-9"><a href="#cb43-9" tabindex="-1"></a>              <span class="at">own =</span> own_pre, <span class="at">price =</span> p_R3,</span>
+<span id="cb43-10"><a href="#cb43-10" tabindex="-1"></a>              <span class="at">shares =</span> shares3, <span class="at">cost  =</span> c_j_NA,</span>
+<span id="cb43-11"><a href="#cb43-11" tabindex="-1"></a>              <span class="at">weight =</span> wt_vector, <span class="at">nest_allocation=</span>a3, </span>
+<span id="cb43-12"><a href="#cb43-12" tabindex="-1"></a>              <span class="at">div_matrix =</span> true_div_NA,</span>
+<span id="cb43-13"><a href="#cb43-13" tabindex="-1"></a>              <span class="at">mu_constraint_matrix =</span> mu_constraints,</span>
 <span id="cb43-14"><a href="#cb43-14" tabindex="-1"></a>              <span class="at">control =</span> <span class="fu">list</span>(<span class="at">maxit =</span> <span class="dv">1000</span>) )</span></code></pre></div>
 <div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" tabindex="-1"></a>out4<span class="sc">$</span>par[<span class="dv">1</span>]</span>
-<span id="cb44-2"><a href="#cb44-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.8998118</span></span></code></pre></div>
+<span id="cb44-2"><a href="#cb44-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.8999431</span></span></code></pre></div>
 <div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" tabindex="-1"></a>alpha_true</span>
 <span id="cb45-2"><a href="#cb45-2" tabindex="-1"></a><span class="co">#&gt; [1] -0.9</span></span></code></pre></div>
 <div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a>out4<span class="sc">$</span>par[<span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]</span>
-<span id="cb46-2"><a href="#cb46-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7000107 0.7000098</span></span></code></pre></div>
+<span id="cb46-2"><a href="#cb46-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.6999871 0.7000204</span></span></code></pre></div>
 <div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" tabindex="-1"></a>mu3</span>
 <span id="cb47-2"><a href="#cb47-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.7 0.7 0.7 0.7 0.7</span></span></code></pre></div>
 </div>

@@ -5,8 +5,9 @@
 #' @param own Ownership matrix
 #' @param shares Observed market shares
 #' @param cost Marginal costs for each product
-#' @param weight Vector of length four with weights given to prices, shares,
-#' diversions, and costs, respectively. Default is c(1,1,1,1).
+#' @param weight Weighting vector of length equal to number of margins provided;
+#' if diversions are provided, these weights are relative to weight on matching
+#' diversions.
 #' @param nest_allocation For generalized nested logit demand, a J-by-K matrix
 #' where each element (j,k) designates the membership of good j in nest k. Rows
 #' should sum to 1.
@@ -22,16 +23,6 @@
 #' @param div_calc_marginal is a logical if function should match to marginal
 #' diversions (if TRUE) or second choice diversions (if FALSE). Default
 #' to TRUE.
-#' @param optimizer Which optimization routine should be used to find
-#' equilibrium prices, either BBoptim or multiroot
-#' @param optimizer_c Which optimization routine should be used to calibrate
-#' costs, either BBoptim or optim
-#' @param maxitval Max iterations during price optimization from foc
-#' @param maxitval_c Max iterations during cost optimization from foc
-#' @param fast_version logical; if True, uses only first-order conditions for
-#' products that have non-missing costs. If False, uses the model to predict costs
-#' for all products, and then uses all first-order conditions, which takes longer
-#' to calibrate. Default is False.
 #' @param returnOutcomes logical; should equilibrium objects be returned (mean
 #' value parameter, prices, shares, costs) as a list.
 #'
@@ -50,7 +41,7 @@
 #'                        price = c(.05, .34, .33),
 #'                        shares = c( 0.31, 0.27, 0.25),
 #'                        cost = c(.05,.31,.30),
-#'                        weight = c(1,1,1,1),
+#'                        weight = c(1,1,1),
 #'                        nest_allocation = nest1, div_matrix = divmat)
 #'
 #' @export
@@ -62,16 +53,20 @@
 
 
 bertrand_calibrate_gnl <- function(param,own,price,shares,cost,
-                                   weight = c(1,1,1,1),
-                                   nest_allocation, div_matrix,
-                                   mu_constraint_matrix = NA,
-                                   div_calc_marginal = TRUE,
-                                   optimizer="BBoptim",
-                                   optimizer_c="optim",
-                                   returnOutcomes = FALSE,
-                                   maxitval = 1500,
-                                   maxitval_c = 1500,
-                                   fast_version = FALSE){
+                                      weight = NA,
+                                      nest_allocation, div_matrix = NA,
+                                      mu_constraint_matrix = NA,
+                                      div_calc_marginal = TRUE,
+                                      returnOutcomes = FALSE){
+
+  # checks for length of weighting vector
+  num_c <- sum(!is.na(cost))
+
+  if (anyNA(weight)) {
+    weight <- rep(1, times = num_c)
+  } else if (length(weight) != num_c) {
+    stop("weight must have length equal to the number of margins (", num_c, ")")
+  }
 
   # If GNL, define GNL objects
   a_jk <- nest_allocation
@@ -79,19 +74,6 @@ bertrand_calibrate_gnl <- function(param,own,price,shares,cost,
   K_val <- dim(a_jk)[2]
 
   alpha <- param[1]
-
-
-  #### checks on weighting vector ####
-  if (fast_version == FALSE) {
-  if (length(weight) != 4) {
-    warning("Weight vector should be of length 4.")
-  }
-  }
-  if (fast_version == TRUE) {
-    if (length(weight) != 3 & length(weight) != 4) {
-      warning("Weight vector should be of length 3.")
-    }
-  }
 
 
   #### checks on mu_constraint matrix ####
@@ -127,151 +109,49 @@ bertrand_calibrate_gnl <- function(param,own,price,shares,cost,
 
   mu <- mu_constraint_matrix %*% mu_prime
 
-  J <- length(price)
 
+  # Find delta that matches shares
   delta0 <- log(shares) - log(1-sum(shares)) - alpha*price
 
   find_d <- rootSolve::multiroot(f = match_share, start = delta0,
-                      price=price,alpha=alpha,nest_allocation=a_jk,mu=mu,
-                      shares_obs = shares)
+                                 price=price,alpha=alpha,nest_allocation=a_jk,mu=mu,
+                                 shares_obs = shares)
 
   delta <- find_d$root
 
-  # if multiroot fails inside of optimization. Set to delta0.
-    if (anyNA(delta)) {
-      delta <- delta0
-      warning("Multiroot failed to find mean values that matched shares.")
-    }
+  # calculate matrix of derivatives
 
-  x0 <- price
+  dd <- numDeriv::jacobian(share_calc, x = price,
+                           delta = delta, alpha = alpha,
+                           nest_allocation = a_jk,
+                           mu = mu)
+  omega <- own * t(dd)
 
-  #### Cost calibration. Only needed for fast=FALSE version.
-  if (fast_version == FALSE) {
+  # Back out implied cost from FOC at observed prices: Omega*(p-c) + s = 0
+  # => c_implied = p + solve(Omega) %*% s
+  c_implied <- as.numeric(price + solve(omega) %*% shares)
 
-  ## Given observed prices, and current guess of demand parameter values,
-  ## back out costs consistent with FOCs.
+  # Only compute residuals where cost is observed
+  cdiff <- cost - c_implied
+  keep <- !is.na(cdiff)
 
-  if (anyNA(cost) == FALSE) {
-    x06 <- cost
-  }
-  if (anyNA(cost) == TRUE) {
-    meancost <- mean(cost, na.rm = TRUE)
-    x06 <- ifelse(!is.na(cost), cost, meancost)
-  }
-
-  if (optimizer_c == "optim") {
-    out_cost <- stats::optim(f = bertrand_foc_c, par = x06,
-                      price = price, own = own, alpha = alpha,
-                      delta = delta,
-                      nest_allocation=a_jk, mu=mu, sumFOC = TRUE,
-                      control = list(maxit = maxitval_c) )
-
-    cost_cal <- out_cost$par
-
-    if (out_cost$convergence != 0) {
-      warning(paste0("Cost calibration did not converge with code "),out_cost$convergence)
-    }
-  }
-
-  if (optimizer_c == "BBoptim") {
-    out_cost <- BB::BBoptim(fn = bertrand_foc_c, par = x06,
-                      price = price, own = own, alpha = alpha,
-                      delta = delta,
-                      nest_allocation=a_jk, mu=mu, sumFOC = TRUE,
-                      control = list(maxit = maxitval_c) )
-
-    cost_cal <- out_cost$par
-
-    if (out_cost$convergence != 0) {
-      warning(paste0("Cost calibration did not converge with code "),out_cost$convergence)
-    }
-  }
-  }
-
-  if (fast_version == TRUE) {
-    cost_cal <- cost
-  }
-
-  ## BBoptim or multiroot. If there are missing costs, use BBoptim
-  if (optimizer == "BBoptim") {
-    out1 <- BB::BBoptim(f = bertrand_foc, par = x0,
-                    own = own, alpha= alpha,
-                    delta = delta, cost = cost_cal,
-                    nest_allocation = a_jk, mu = mu,
-                    sumFOC = TRUE, control = list(trace=FALSE, maxit = maxitval))
-
-    p_model <- out1$par
-
-    if (out1$convergence != 0) {
-      warning(paste0("Price equilibrium did not converge with code "),out1$convergence)
-    }
-
-  }
-  if (optimizer == "multiroot") {
-    out1 <- rootSolve::multiroot(f = bertrand_foc, start = x0,
-                      own = own, alpha= alpha,
-                      delta = delta, cost = cost_cal,
-                      nest_allocation = a_jk, mu = mu)
-
-    p_model <- out1$root
-  }
-
-  share_m <- share_calc(price=price,delta=delta,alpha=alpha,nest_allocation=a_jk,mu=mu)
+  # Compute diversions
   diversions_m <- diversion_calc(price=price,alpha=alpha,delta=delta,
                                  nest_allocation=a_jk,mu=mu,
                                  marginal = div_calc_marginal)
 
-
-  if (fast_version == FALSE) {
-
-  matchCost <- TRUE
-
-  ## objective function with new weight method
-
-    pdiff <- ((price - p_model)^2) * weight[1]
-    sdiff <- ((shares - share_m)^2) * 1000 * weight[2]
-    div_diff <- ((as.numeric(div_matrix - diversions_m)^2)*100 * weight[3])
-    cost_diff <- ((cost - cost_cal)^2) * weight[4]
-
-    if (matchCost == TRUE) {
-      objfxn <- sum(pdiff) + sum(sdiff) + sum(div_diff, na.rm = TRUE) +
-        sum(cost_diff, na.rm = TRUE)
-    }
-
+  div_diff <- (as.numeric(div_matrix - diversions_m)^2)*100
 
   if (returnOutcomes == FALSE) {
+    objfxn <- sum(weight * cdiff[keep]^2) + sum(div_diff, na.rm = TRUE)
     return(objfxn)
   }
+
   if (returnOutcomes == TRUE) {
-    return(list("FOCs" = c(pdiff,sdiff,div_diff,cost_diff),
-                "delta_cal" = delta,
-                "p_model" = p_model,
-                "share_m" = share_m,
-                "cost_cal" = cost_cal,
-                "diversions_m" = diversions_m) )
-  }
+    return(list("cost_cal" = c_implied,
+                "delta_cal" = delta) )
   }
 
-  if (fast_version == TRUE) {
-    pdiff <- ((price - p_model)^2) * weight[1]
-    sdiff <- ((shares - share_m)^2) * 1000 * weight[2]
-    div_diff <- ((as.numeric(div_matrix - diversions_m)^2)*100 * weight[3])
-    # scaling so that default weight is same magnitude across components of
-    # objective function
-
-    objfxn <- sum(pdiff) + sum(sdiff) + sum(div_diff, na.rm = TRUE)
-
-    if (returnOutcomes == FALSE) {
-      return(objfxn)
-    }
-    if (returnOutcomes == TRUE) {
-      return(list("FOCs" = c(pdiff,sdiff,div_diff),
-                  "delta_cal" = delta,
-                  "p_model" = p_model,
-                  "share_m" = share_m,
-                  "diversions_m" = diversions_m) )
-    }
-  }
 }
 
 
